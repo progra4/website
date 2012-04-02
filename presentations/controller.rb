@@ -1,0 +1,1 @@
+layout "slides.html.erb"
