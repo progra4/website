@@ -97,7 +97,7 @@ body {
 }
 
 .slides.template-default > article:not(.nobackground):not(.biglogo) {
-  background: url(unitec.png) 673px 566px no-repeat;  
+  background: url(/images/unitec.png) 673px 566px no-repeat;  
   
   background-color: white;  
 } 
@@ -155,7 +155,7 @@ body {
 /* Slide styles */
 
 .slides.template-default article.biglogo {
-  background: white url(unitec.png) 50% 50% no-repeat;
+  background: white url(/images/unitec.png) 50% 50% no-repeat;
 }
 
 .slides.template-io2011 article.biglogo {
