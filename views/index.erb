@@ -1,0 +1,15 @@
+<h1>Programación 4</h1>
+
+Bienvenidos a progra4. Aquí encontrarán recursos útiles para la clase.
+
+<ul>
+<% @guides.each do |guide| %>
+  <li><%= link_to :guide, guide%></li>
+<%end%>
+</ul>
+
+<ul>
+<% @presentations.each do |presentation| %>
+  <li><%= link_to :presentation, presentation %></li>
+<%end%>
+</ul>
