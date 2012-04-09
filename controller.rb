@@ -15,10 +15,10 @@ get '/' do
 end
 
 get '/g/:title' do |title|
-  markdown :"guides/#{title}", layout_engine: :erb, layout: :layout
+  markdown :"guides/#{title}", layout_engine: :erb, layout: :layout, encoding: 'ASCII-8BIT'
 end
 
 get '/p/:title' do |title|
-  haml :"presentations/#{title}", layout: :slides, layout_engine: :erb
+  haml :"presentations/#{title}", layout: :slides, layout_engine: :erb, encoding: 'ASCII-8BIT'
 end
 
