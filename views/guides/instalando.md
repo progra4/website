@@ -26,9 +26,9 @@ ejecutando
 
     cat ~/.ssh/id_rsa.pub
 
-Copiá eso y pegalo acá: 
+Copiá eso y pegalo acá: <https://github.com/account/ssh>
 
-<https://github.com/account/ssh>
+
 
 (Más info acá <http://help.github.com/linux-set-up-git/>)
 
