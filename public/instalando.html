@@ -1,0 +1,233 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+blockquote {
+    margin: 0;
+    padding: 0;
+}
+body {
+    font-family: "Helvetica Neue", Helvetica, "Hiragino Sans GB", Arial, sans-serif;
+    font-size: 13px;
+    line-height: 18px;
+    color: #737373;
+    margin: 10px 13px 10px 13px;
+}
+a {
+    color: #0069d6;
+}
+a:hover {
+    color: #0050a3;
+    text-decoration: none;
+}
+a img {
+    border: none;
+}
+p {
+    margin-bottom: 9px;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    color: #404040;
+    line-height: 36px;
+}
+h1 {
+    margin-bottom: 18px;
+    font-size: 30px;
+}
+h2 {
+    font-size: 24px;
+}
+h3 {
+    font-size: 18px;
+}
+h4 {
+    font-size: 16px;
+}
+h5 {
+    font-size: 14px;
+}
+h6 {
+    font-size: 13px;
+}
+hr {
+    margin: 0 0 19px;
+    border: 0;
+    border-bottom: 1px solid #ccc;
+}
+blockquote {
+    padding: 13px 13px 21px 15px;
+    margin-bottom: 18px;
+    font-family:georgia,serif;
+    font-style: italic;
+}
+blockquote:before {
+    content:"\201C";
+    font-size:40px;
+    margin-left:-10px;
+    font-family:georgia,serif;
+    color:#eee;
+}
+blockquote p {
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 18px;
+    margin-bottom: 0;
+    font-style: italic;
+}
+code, pre {
+    font-family: Monaco, Andale Mono, Courier New, monospace;
+}
+code {
+    background-color: #fee9cc;
+    color: rgba(0, 0, 0, 0.75);
+    padding: 1px 3px;
+    font-size: 12px;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+}
+pre {
+    display: block;
+    padding: 14px;
+    margin: 0 0 18px;
+    line-height: 16px;
+    font-size: 11px;
+    border: 1px solid #d9d9d9;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+pre code {
+    background-color: #fff;
+    color:#737373;
+    font-size: 11px;
+    padding: 0;
+}
+@media screen and (min-width: 768px) {
+    body {
+        width: 748px;
+        margin:10px auto;
+    }
+}
+</style>
+<title>Instalando las cosas</title>
+</head>
+<body>
+<h1>Instalando las cosas</h1>
+
+<p>Necesitamos instalar: la versión 1.9.3 del lenguaje de programación
+ruby. Una forma de instalar librerías de ruby:
+<a href="http://rubygems.org/">rubygems</a> y git para control de versiones. Vamos
+paso a paso.</p>
+
+<h2>1. Instalando git</h2>
+
+<p>Necesitamos git para todo en esta clase, así que instalémoslo:</p>
+
+<pre><code>sudo apt-get install git-core
+</code></pre>
+
+<p>Para manejar nuestros proyectos en git, usaremos <a href="http://github.com">http://github.com</a>.
+Así que entrá ahí y creá una cuenta, yo espero.</p>
+
+<p>Una vez creada una cuenta, necesitamos crear una llave pública para que
+cuando subamos código desde nuestra máquina a github, éste pueda confiar
+en nosotros. Con este comando:</p>
+
+<pre><code>ssh-keygen -t rsa -C "your_email@youremail.com"
+</code></pre>
+
+<p>Una vez que creés tu cuenta, mirá qué contiene tu llave pública
+ejecutando</p>
+
+<pre><code>cat ~/.ssh/id_rsa.pub
+</code></pre>
+
+<p>Copiá eso y pegalo acá: <a href="https://github.com/account/ssh">https://github.com/account/ssh</a></p>
+
+<p>(Más info acá <a href="http://help.github.com/linux-set-up-git/">http://help.github.com/linux-set-up-git/</a>)</p>
+
+<h2>2. Instalando ruby</h2>
+
+<p>Quizá ya tengás ruby instalado en tu sistema, probá escribir</p>
+
+<pre><code> ruby -v
+</code></pre>
+
+<p>Y quizá veás algo como</p>
+
+<pre><code>ruby 1.9.3p125 (2012-02-16 revision 34643) [x86_64-darwin11.3.0]
+</code></pre>
+
+<p>(o algo mucho más corto, lo importante es ver la versión). Lo más
+probable es que tengás la versión <code>1.8.7</code>. En esta clase usaremos la
+versión 1.9 del lenguaje, que tiene algunas diferencias sintácticas.
+Podríamos meternos al rollo de cambiar la versión de ruby del sistema,
+eliminando el ruby viejo y compilando ruby 1.9 <a href="http://www.ruby-lang.org/en/downloads/">a
+mano</a>.</p>
+
+<p>Pero no nos vamos a complicar tanto, vamos a usar
+<a href="http://beginrescueend.com/">rvm</a>, un proyecto que permite manejar
+varias versiones de ruby en la misma máquina sin morir en el intento.</p>
+
+<p>Para <a href="http://beginrescueend.com/rvm/install/">instalarlo</a>, corré en la
+línea de comandos:</p>
+
+<pre><code>sudo apt-get install curl libcurl3
+curl -L get.rvm.io | bash -s stable
+source ~/.bash_profile
+</code></pre>
+
+<p>Para probar que todo salió bien, escribí:</p>
+
+<pre><code>type rvm | head -1
+</code></pre>
+
+<p>Si rvm está bien instalado, eso debería decir algo como <code>rvm is a
+function</code></p>
+
+<p>Si todo salió bien, escribí:</p>
+
+<pre><code>rvm requirements
+</code></pre>
+
+<p>Y seguí las instrucciones en la pantalla para instalar las dependencias
+de ruby. Una vez terminado eso, es hora de instalar un nuevo ruby:</p>
+
+<pre><code>rvm install 1.9.3
+rvm use 1.9.3 --default
+</code></pre>
+
+<p>La segunda de esas líneas hace que de ahora en adelante tu máquina use
+ruby 1.9.3 por defecto.</p>
+
+<p>Ahora, estas dos líneas para asegurarte que tenés las versiones
+correctas de las cosas:</p>
+
+<pre><code>ruby -v
+#debería salir algo como 1.9.3
+gem -v
+#algo como 1.8.21
+</code></pre>
+
+<p>Y hasta podés entrar a la consola de ruby y jugar:</p>
+
+<pre><code>irb
+&gt; puts "Hola Mundo"
+</code></pre>
+
+<p>(Más info acá <a href="http://beginrescueend.com/rvm/install/#explained">http://beginrescueend.com/rvm/install/#explained</a>)</p>
+</body>
+</html>
