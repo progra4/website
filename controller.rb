@@ -19,6 +19,6 @@ get '/g/:title' do |title|
 end
 
 get '/p/:title' do |title|
-  haml :"presentations/#{title}", layout: :slides, layout_engine: :erb, encoding: 'ASCII-8BIT'
+  haml :"presentations/#{title}", layout: :slides, layout_engine: :erb
 end
 
