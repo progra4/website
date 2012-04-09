@@ -1,5 +1,5 @@
-#encoding: utf-8
 require 'sinatra'
+Encoding.default_internal = Encoding.find("UTF-8")
 
 helpers do
   def link_to type, name
