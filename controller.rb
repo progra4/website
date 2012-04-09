@@ -15,7 +15,9 @@ get '/' do
 end
 
 get '/g/:title' do |title|
-  markdown :"guides/#{title}", layout_engine: :erb, layout: :layout
+  #
+  #markdown :"guides/#{title}", layout_engine: :erb, layout: :layout
+  redirect "#{title}.html"
 end
 
 get '/p/:title' do |title|
