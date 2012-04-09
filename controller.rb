@@ -1,3 +1,4 @@
+#encoding: utf-8
 require 'sinatra'
 
 helpers do
@@ -14,10 +15,10 @@ get '/' do
 end
 
 get '/g/:title' do |title|
-  markdown :"guides/#{title}", layout_engine: :erb, layout: :layout, default_encoding: 'UTF-8'
+  markdown :"guides/#{title}", layout_engine: :erb, layout: :layout
 end
 
 get '/p/:title' do |title|
-  haml :"presentations/#{title}", layout: :slides, layout_engine: :erb, encoding: 'ASCII-8BIT'
+  haml :"presentations/#{title}", layout: :slides, layout_engine: :erb
 end
 
