@@ -2,12 +2,14 @@
 
 Bienvenidos a progra4. Aquí encontrarán recursos útiles para la clase.
 
+<h2>Guías</h2>
 <ul>
 <% @guides.each do |guide| %>
   <li><%= link_to :guide, guide%></li>
 <%end%>
 </ul>
 
+<h2>Presentaciones</h2>
 <ul>
 <% @presentations.each do |presentation| %>
   <li><%= link_to :presentation, presentation %></li>
