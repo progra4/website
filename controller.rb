@@ -15,7 +15,7 @@ get '/' do
 end
 
 get '/g/:title' do |title|
-  markdown :"guides/#{title}", layout_engine: :erb, layout: :layout, default_encoding: 'utf-8'
+  markdown :"guides/#{title}", layout_engine: :erb, layout: :layout, default_encoding: 'ASCII-8BIT'
 end
 
 get '/p/:title' do |title|
