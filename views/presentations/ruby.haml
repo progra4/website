@@ -1,0 +1,121 @@
+%article
+  %h1 Aprendamos Ruby
+%article
+  :markdown
+    * Cuando veás algo como esto `> 1 + 1`, es código que tenés que ejecutar en `irb`
+    * Cuando veás algo como esto `$ echo "hola"`, es código que tenés que ejecutar en la terminal
+    * Vamos a tratar de que todo sea interactivo
+%article
+  %h1 ¿Qué tenemos que saber de ruby?
+  :markdown
+    * Es un lenguaje que _adivina_ los tipos: no se declaran explícitamente
+    * Es totalmente orientado a objetos: todo es un objeto
+    * Es un lenguaje interpretado: no se compila, sino que cada expresión se ejecuta
+%article
+  %h2 ¿En qué nos vamos a enfocar?
+  :markdown
+    * Bloques de construcción: tipos "primitivos"
+    * Medios de combinación
+    * Medios de abstracción
+%article
+  %h1 Nuestro primer programa en ruby
+%article
+  %h2 hola.rb
+  %pre
+    saludo_simple = "Hola Mundo"
+    puts saludo
+%article
+  %pre
+    $ ruby hola.rb
+    Hola Mundo
+  %p ¿Qué pasa si en lugar de `puts`usás `print`?
+%article
+  %h2 corrámoslo en irb
+  %pre
+    > puts "Hola mundo"
+%article
+  %h1 ¿Para qué usaríamos irb?
+%article
+  %h2 saludo.rb
+  %pre
+    saludo = "Hola"
+    nombre = gets()
+    puts(saludo, nombre)
+%article
+  :markdown
+        saludo = "hola"
+        #este es un comment
+        nombre = gets
+        puts saludo, nombre
+  %p A menos que creen ambigüedad, los paréntesis son opcionales al llamar métodos
+%article
+  %h3 Tipos: números
+  :markdown
+        > 1 + 1
+        > 1 + 11 % 5
+        > (1 + 11) % 5
+        > 3 / 2
+        > 3.0 / 2.0
+        > 0.zero?
+        > 1.zero?
+        > 1.odd?
+        > 2.odd?
+        > (1).+(1)
+
+    En ruby los números son objetos, instancias de la clase `Fixnum`:
+    <http://www.ruby-doc.org/core-1.9.3/Fixnum.html>
+%article{class: :small}
+  %h3 Tipos: cadenas de caracteres
+  :markdown
+        > "Hola"
+        > 'Hola'
+        > 'What\'s up'
+        > "Hola" == 'Hola'
+        > "Hola" != "Adios"
+        > %q{HOLA} == 'Hola'
+        > %Q|HOLA| == "Hola".upcase
+        > 'hoy es' + 'martes'
+        > 'fun' * 3
+        > v = "tomar"
+        > v << "cereal"
+        > v.concat("porque es viernes")
+        > %Q{
+        este es un
+        string multilinea
+        }
+%article
+  %h2 que_es_esto.rb
+  :markdown
+        print "How old are you?"
+        age = gets.chomp
+        puts "You have \#{age} years, that's \#{ age * 365 } days!"
+%article
+  %h3 Operaciones con Strings
+  :markdown
+        > "este es un string".length
+        > "aqui, hay, comas".split(",")
+        > "Veo veo, que veo".include? "veo"
+        > "Empieza con una palabra".start_with? "Empieza"
+        > "Cual es la primera l".index 'l'
+        > "yo es yo, y yo digo que yo es".sub "yo", 'Ella'
+        > "yo es yo, y yo digo que yo es".gsub "yo", 'Ella'
+        > 1.to_s + "1"
+        > 1 + "   1   ".strip.to_i
+%article
+  %h3 Verdad y Nulidad
+  :markdown
+        > ()
+%article
+  %h2 Más recursos: sitios interactivos
+  :markdown
+    * [Try Ruby](http://tryruby.org/levels/1/challenges/0)
+    * [Ruby Monk](http://rubymonk.com/)
+    * [Ruby Koans](http://rubykoans.com/)
+%article
+  %h2 Más recursos: Libros
+  :markdown
+    * [Learn Ruby The Hard Way](http://ruby.learncodethehardway.org)
+    * [Learn to Program](http://pine.fm/LearnToProgram/) 
+    * [Programming Ruby ("the pickaxe book")](http://www.ruby-doc.org/docs/ProgrammingRuby/)
+    * [Why's Poignant Guide to Ruby](http://mislav.uniqpath.com/poignant-guide/)
+    * [Mr. Neighborly's Humble Little Ruby Book](http://www.humblelittlerubybook.com/)

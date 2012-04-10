@@ -228,6 +228,26 @@ gem -v
 &gt; puts "Hola Mundo"
 </code></pre>
 
+<h3>Advertencia</h3>
+
+Si te pasa que tenés el error que <code>rvm is not a function</code> recordá correr esta línea de código
+
+<pre>
+  <code>
+    echo '[[ -s "$HOME/.rvm/scripts/rvm" ]] &amp;&amp; . "$HOME/.rvm/scripts/rvm" # Load RVM function' >> ~/.bash_profile
+    source ~/.bash_profile
+</code>
+</pre>
+
+Si, además, te pasa que cuando abrís una nueva terminal, ejecutar <code>ruby -v</code> te da error o una versión vieja
+ejecutá esto otro, además
+
+<pre>
+  <code>
+    echo "source ~/.bash_profile" >> ~/.bashrc
+</code>
+</pre>
+
 <p>(Más info acá <a href="http://beginrescueend.com/rvm/install/#explained">http://beginrescueend.com/rvm/install/#explained</a>)</p>
 </body>
 </html>
