@@ -88,7 +88,8 @@
   :markdown
         print "How old are you?"
         age = gets.chomp
-        puts "You have \#{age} years, that's \#{ age * 365 } days!"
+        puts "You have \#{age} years, that's \#{ age * 365 } days!!"
+        #puts 'You have \#{age} years, that\'s \#{ age * 365 } days!'
 %article
   %h3 Operaciones con Strings
   :markdown
@@ -101,10 +102,256 @@
         > "yo es yo, y yo digo que yo es".gsub "yo", 'Ella'
         > 1.to_s + "1"
         > 1 + "   1   ".strip.to_i
-%article
+        > a = "Soy una cadena de caracteres"
+        > a.gsub("cadena", "String")
+        > puts a
+        > a.gsub!("cadena", "String")
+        > puts a
+%article{class: :small}
   %h3 Verdad y Nulidad
   :markdown
-        > ()
+        > true or false
+        > true || false
+        > true and false
+        > true and 1
+        > 1 and 0
+        > 0 || false
+        > [] || false
+        > nil || true
+        > 0 || nil
+        > nil.nil?
+        > nil.to_s
+        > nil.class
+        > meditando = false
+        > puts "Om" if meditando
+        > contemplando = nil
+        > puts "No contemplando" if not contemplando
+        > puts "Nada de contemplar" unless contemplando
+        > puts "El mundo explota" unless superman_lo_salva
+        > puts "Ommm" if meditando unless contemplando
+%article
+  %h3 Asignación
+  :markdown
+        > x, y, z = 1, 2, 3
+        > x, y = y, x
+        > a = nil
+        > a = a || 5
+        > puts a
+        > a = false
+        > a ||= 7
+        > puts a
+        > a ||= 10
+        > puts a
+        > a &&= 15
+        > puts a
+        > a = "    ".strip.empty? ? 20 : 35
+        > Pi = 3.1416
+        > Pi = 4.5
+%article
+  %h3 Símbolos
+  :markdown
+        > sym = :simbolo
+        > puts sym.class unless sym.is_a?(String)
+        > a = "cadena"
+        > b = "cadena"
+        > a.equal?(b)
+        > c = :simba
+        > d = :simba
+        > c.equal? d
+%article
+  %h3 Rangos
+  :markdown
+        > rango = (1..5)
+        > rango.first
+        > rango.last
+        > rango.cover? 3
+        > rango.cover? 10
+        > otro_rango = ('a'..'z')
+        > otro_rango.include? 'x'
+        > otro_rango.include? 'X'
+%article
+  %h3 Arreglos
+  :markdown
+        > a = [1,2,3,4,20,4,15,3,2,1]
+        > a[0]
+        > a[-2]
+        > b = ['un', 'arreglo', 'de', 'palabras']
+        > c = %w{un arreglo de palabras}
+        > b == c
+        > a.include? 4
+        > a.uniq
+        > puts a.max, a.min
+        > puts b.max, b.min
+        > a + b
+        > d = [['soy', 'otro'], "arreglo de palabras".split]
+        > d.flatten
+        > g = ['los', 'son'].zip ['gatos', 'divertidos']
+        > g.flatten.join(" ") << "!!"
+        > [1,2,3,5].sample 3
+%article
+  %h3 Arreglos
+  :markdown
+        > e = [1, nil, 2, false, 3, nil, 4, nil, 0].compact
+        > x = [1, 2, 3, 4]
+        > x << 5
+        > x.push 6
+        > x.pop
+        > x.shift
+        > y = [2,4]
+        > x + y
+        > x - y
+        > y - x
+        > x & y
+        > x * 3
+        > (1..10).to_a
+
+%article
+  %h3 Hashes (mapas)
+  :markdown
+        > nums = {'uno' => 'one', 'dos' => 'two', 'tres' => 'three'}
+        > nums['uno']
+        > nums = {:one => 'uno', :two => 2}
+        > nums[:two]
+        > nums[:three]
+        > dias = {lunes: 1, martes: 2, jueves: 4}
+        > dias[:lunes] && "el lunes es \#{dias[:lunes]}!"
+        > dias[:miercoles] || "el miercoles es 3"
+        > Date.today
+        > require 'date'
+        > hoy = Date.today
+        > agenda = {hoy => "trabajar", (hoy + 24) => "relajarse"}
+        > maniana = hoy + 24
+        > agenda[hoy]
+        > agenda[maniana]
+%article
+  %h3 Bloques
+  :markdown
+        3.times { puts "Ruby es divertido!" }
+        3.times do
+          puts "ruby es divertido"
+        end
+
+        %w{cafe huevos cereal}.each{|alimento| puts "Yo desayuno \#{alimento}"}
+
+        1.upto(10) do |num| #y si ponemos (1..10).each ?
+          puts "\#{num} es par" if num.even?
+        end
+
+        obras = {
+          "Hamlet" => "William Shakespeare",
+          "A doll's house" => "Henrik Ibsen",
+          "El alcalde de Zalamea" => "Pedro de la Barca"
+        }
+
+        obras.sort.each do |obra, autor|
+          puts "\#{autor} escribio \#{obra}"
+        end
+%article
+  %h3 Bloques y el módulo <code>Enumerable</code>
+  :markdown
+        > a = [1,4,5,6,7,2,3,9]
+        > potencias = a.map{|n| n ** 2 }
+        > relajo = a.collect do |n|
+          random = n * rand(10)
+          "\#{n} se convierte en \#{random}"
+        end
+        > pares = a.select{|n| n.even? }
+        > pares = a.reject {|n| n.odd?  }
+        > no_3  = a.delete_if{|n| n % 3 == 0}
+        > pares = a.select(&:even?)
+%article
+  %h3 Más con bloques
+  :markdown
+        estudiantes = {
+          paco: 80,
+          pedro: 70,
+          juan: 59,
+          marla: 100
+          nerdman: 100
+        }
+        pasan = estudiantes.reject do |nombre, nota|
+          puts "\#{nombre} saca \#{nota}"
+          nota < 60
+        end
+        excelentes = estudiantes.select do |nombre, nota|
+          criterio = nota >= 80
+          puts "\#{nombre} es un nerd" if criterio
+          criterio
+        end
+%article
+  %h1 Estructuras de control (todo en ruby es una expr!, excepciones!)
+%article{:class => "smaller"}
+  %h3 If/unless
+  :markdown
+        require 'date'
+        print "En que anio naciste?"
+        birthyear = gets.chomp
+        edad = Date.today.year - birthyear
+        mayor_de_edad = edad >= 21
+        if mayor_de_edad
+          puts "Ya podes votar!"
+        end
+
+        unless mayor_de_edad
+          puts "que bueno que no podes botar"
+        end
+
+        if mayor_de_edad
+          puts "contame sobre la vida"
+        else
+          puts "vos no sabes nada"
+        end
+
+        if edad <= 21
+          puts "si, si, ya sabemos"
+        elsif edad == 20  || edad >=24
+          puts "alguna consecuencia"
+        else
+          puts "anciano"
+        end
+%article
+  %h3 Más sobre condiciones y expresiones
+  :markdown
+        a = nil
+        if a
+            puts "ya lo sabiamos"
+        end
+        print "tu nombre completo?"
+        nombre_original = gets.chomp
+        modificado = nombre_original.gsub(/\s+/, "_").downcase
+        correo_de_unitec = unless modificado.include?("rumpeltinskin")
+          email = modificado
+          email << "@"
+          email << "unitec.edu"
+        end
+        correo_completo = unless email.length > 10
+          "<\#{nombre_original}> \#{correo_de_unitec}"
+        else
+         correo_de_unitec
+        end
+%article
+  %h3 Loops
+  :markdown
+        n = 1
+        while n < 10
+          n += 1
+        end
+
+        m = 1
+        until n >= 10
+          m += 1
+        end
+
+        loop do
+           n = rand 100
+           puts n
+           break if n < 10 || n > 70
+        end
+%article
+  %h2 Tarea (?)
+  :markdown
+    * La estructura de control `case`
+    * La estructura de control `begin..rescue..end`
 %article
   %h2 Más recursos: sitios interactivos
   :markdown
@@ -117,5 +364,6 @@
     * [Learn Ruby The Hard Way](http://ruby.learncodethehardway.org)
     * [Learn to Program](http://pine.fm/LearnToProgram/) 
     * [Programming Ruby ("the pickaxe book")](http://www.ruby-doc.org/docs/ProgrammingRuby/)
+    * [Documentación de Ruby](http://www.ruby-doc.org/core-1.9.3/)
     * [Why's Poignant Guide to Ruby](http://mislav.uniqpath.com/poignant-guide/)
     * [Mr. Neighborly's Humble Little Ruby Book](http://www.humblelittlerubybook.com/)
