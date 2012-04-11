@@ -205,7 +205,7 @@
         > x * 3
         > (1..10).to_a
 
-%article
+%article{class: "smaller"}
   %h3 Hashes (mapas)
   :markdown
         > nums = {'uno' => 'one', 'dos' => 'two', 'tres' => 'three'}
@@ -213,6 +213,10 @@
         > nums = {:one => 'uno', :two => 2}
         > nums[:two]
         > nums[:three]
+        > nums[:three] = 3
+        > puts nums
+        > nums.keys
+        > nums.values
         > dias = {lunes: 1, martes: 2, jueves: 4}
         > dias[:lunes] && "el lunes es \#{dias[:lunes]}!"
         > dias[:miercoles] || "el miercoles es 3"
@@ -223,7 +227,7 @@
         > maniana = hoy + 24
         > agenda[hoy]
         > agenda[maniana]
-%article
+%article{class: "smaller"}
   %h3 Bloques
   :markdown
         3.times { puts "Ruby es divertido!" }
@@ -259,7 +263,7 @@
         > pares = a.reject {|n| n.odd?  }
         > no_3  = a.delete_if{|n| n % 3 == 0}
         > pares = a.select(&:even?)
-%article
+%article{class: "smaller"}
   %h3 Más con bloques
   :markdown
         estudiantes = {
@@ -279,7 +283,7 @@
           criterio
         end
 %article
-  %h1 Estructuras de control (todo en ruby es una expr!, excepciones!)
+  %h1 Estructuras de control 
 %article{:class => "smaller"}
   %h3 If/unless
   :markdown
@@ -348,10 +352,108 @@
            break if n < 10 || n > 70
         end
 %article
-  %h2 Tarea (?)
+  %h3 Errores
+  :markdown
+        begin
+          #"EstaCadena".noTieneMetodosAsi
+          "String".gsub
+        rescue NoMethodError => e
+          puts "Esto no es java!"
+        rescue Exception
+          puts "Oops, algo estuvo mal"
+        end
+
+        "String".estoNoEsJava rescue puts "Que esto no es java!"
+%article{class: "smaller"}
+  %h3 Métodos
+  :markdown
+        def mi_primer_metodo(nombre)
+          puts "Hola \#{nombre}"
+        end
+
+        def mi_segundo_metodo
+          print "tu nombre?"
+          nombre = gets.chomp
+          puts ""
+          42
+        end
+
+        def mi_tercer_metodo nombre
+          return if nombre.downcase == "jacinto"
+          puts "Vale mas que no te llamas jacinto"
+          nombre.swapcase
+        end
+%article{class: "smaller"}
+  %h3 Más sobre métodos
+  :markdown
+        def sumar(a, b)
+          return a + b
+        end
+
+        def sumar_mejor(a, b); a + b; end
+
+        def sumar_por_defecto(a = 1, b = 1)
+          a + b
+        end
+        def sumar_todos(*nums)
+          acumulador = 0
+          nums.each do |n|
+            acumulador += n
+          end
+          acumulador
+        end
+
+        def sumar_todos_mejor(*nums)
+          nums.reduce do |acumulador, n|
+            acumulador + n
+          end
+        end
+
+        def super_sumar(*nums)
+          nums.inject(&:+) #Symbol#to_proc
+        end
+%article
+  %h3 ¿De qué no hemos hablado?
   :markdown
     * La estructura de control `case`
-    * La estructura de control `begin..rescue..end`
+    * Las expresiones regulares
+    * Las palabras clave `next`, `retry`, `redo`, `continue`, etc.
+%article
+  %h1 La verdad sobre ruby: programación orientada a objetos
+%article
+  %h3 Todo es un objeto, los objetos sólo tienen métodos
+  :markdown
+        > 1 + 1
+        > 1.+(1)
+        > [].length
+        > [] + [1,2,3]
+        > Array.new.+([1,2,3])
+        > [1,2,3][2]
+        > [1,2,3].[](2)
+        > "".methods
+        > "cadena".respond_to?(:equal?)
+        > "cadena".send :length
+        > "cadena".send :eql?, "cadena"
+        > "cadena".class
+        > "cadena".class.class
+        > "cadena".is_a? String
+        > String.methods
+        > String.ancestors
+        > self
+        > self.send :puts, "ZOMG"
+%article
+  %h3 Todos los objetos están abiertos. No hay nada realmente privado ni final
+  :markdown
+        require 'date'
+        puts Date.today.miercoles? rescue "oh noo!"
+
+        class Date
+          def miercoles?
+              self.wday == 3
+          end
+        end
+%article
+  %h3 Nuestras propias clases
 %article
   %h2 Más recursos: sitios interactivos
   :markdown
