@@ -455,12 +455,12 @@
 %article
   %h3 Archivos
   :markdown
-        File.new('archivo', 'w') do |f|
+        File.open('archivo', 'w') do |f|
           f << "este es un archivo"
         end
         #>
         puts File.read('./archivo')
-        File.new('archivo', 'a') do |f|
+        File.open('archivo', 'a') do |f|
           f.write "mas cosas"
         end
         puts File.read('./archivo')
