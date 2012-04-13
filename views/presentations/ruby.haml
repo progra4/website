@@ -453,7 +453,71 @@
           end
         end
 %article
-  %h3 Nuestras propias clases
+  %h3 Archivos
+  :markdown
+        File.new('archivo', 'w') do |f|
+          f << "este es un archivo"
+        end
+        #>
+        puts File.read('./archivo')
+        File.new('archivo', 'a') do |f|
+          f.write "mas cosas"
+        end
+        puts File.read('./archivo')
+%article{class: "smaller"}
+  %h3 Procs: bloques portátiles
+  :markdown
+        %w(cafe huevos leche).each do |alimento|
+          puts "Me gusta desayunar \#{alimento}"
+        end
+
+        %w(pescado arroz lechuga).each do |alimento|
+          puts "Me gusta almorzar \#{alimento}"
+        end
+
+        desayuno = lambda do |alimento|
+            puts "Me gusta desayunar \#{alimento}"
+        end
+        
+        desayuno.call "panqueques"
+        desayuno["leche"]
+
+        %w(cafe huevos leche).each &alimento
+
+        def tiempo_de_comida(tiempo)
+          lambda do |alimento|
+             puts "En el \#{tiempo} me gusta comer \#{alimento}"
+           end
+        end
+        
+        %w(pescado arroz lechuga).each &tiempo_de_comida(almuerzo)
+%article
+  %h3 Programación funcional
+  :markdown
+        def compose(f1, f2)
+          lambda do |param|
+              f1[ f2[param] ]
+          end
+        end
+
+        sq = ->(x){  x*x  }
+        db = ->(x){  x+x  }
+        sq_db = compose(sq, db)
+        sq_db[5]
+        db_sq = compose(db, sq)
+        db_sq[5]
+%article
+  %h3 Bloques como parámetros
+  :markdown
+        def nombres(arreglo_de_pares, &bloque)
+          arreglo_de_pares.each do |par|
+           yield par.reverse.join(", ")
+          end
+        end
+
+        nombres([%w(luis borjas), %w(walt whitman)]) do |nombre|
+          puts "\#{nombre} ha escrito libros"
+        end
 %article
   %h2 Más recursos: sitios interactivos
   :markdown
