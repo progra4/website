@@ -1,0 +1,95 @@
+%article
+  %h1 Http
+%article
+  %h3 ¿Qué es HTTP?
+  %ul{:class => 'build'}
+    %li Protocolo de transferencia de hipertexto
+    %li Basado en el modelo <em>cliente-servidor</em>
+    %li Usa el ciclo <em>solicitud-respuesta</em>
+%article
+  %h3 El cliente
+  %ul{:class => 'build'}
+    %li ¿Quiénes pueden ser clientes?
+    %li Cualquier programa que pueda construir una solicitud y enviarla
+    %li ¿Qué hace un cliente?
+    %li Crea solicitudes, interpreta respuestas, mantiene el estado
+%article{:class => 'small'}
+  %h3 Una rápida introducción a CURL
+  %pre
+    $ which curl
+    $ man curl
+    $ curl google.com
+    $ curl -v google.com
+    $ curl -I google.com
+    $ curl -i google.com
+    $ curl -v httpbin.org/get?hello=world
+    $ curl -v --data param1=data1 httpbin.org/post
+%article
+  %h3 Las solicitudes
+  %pre
+    GET / HTTP/1.1
+    User-Agent: curl/7.19.7 (i486-pc-linux-gnu)
+    Host: google.com
+    Accept: */*
+%article 
+  %h3 Solicitudes:
+  %ul
+    %li Qué se quiere
+    %li Cómo se quiere
+%article
+  %h3 Métodos
+  :markdown
+    * HEAD
+    * GET
+    * POST
+    * PUT
+    * DELETE
+    * TRACE, OPTIONS, CONNECT, PATCH
+%article{:class => 'small'}
+  %h3 URLs
+  %tt http://google.com:80/?q=python#results
+  %ul
+    %li <tt>http:</tt> es el protocolo
+    %li <tt>google.com</tt>, el dominio (host)
+    %li <tt>80</tt>, el puerto
+    %li <tt>/</tt> ruta (path)
+    %li <tt>?q=python</tt>, querystring
+    %li <tt>#results</tt>, fragmento (hash), <em>sólo visible por el cliente</em>
+%article
+  %h3 Encabezados
+  %ul
+    %li Contenido: pares de llave-valor (key-value) separados por punto y coma (;)
+    %li Cada encabezado se separa de otro por un salto de línea
+    %li Ejemplos: 'Accept', 'Cookie', 'Accept-Language'
+    %pre
+      Accept-Language: en-US
+      Content-Disposition: attachment; filename=fname.ext
+%article
+  %h3 El servidor
+  %ul
+    %li Suele estar escuchando: un daemon
+    %li Recibe solicitudes, las interpreta, construye respuestas
+    %li Tan simple como un script, tan complicado como un MVC
+%article
+  %h3 Las respuestas
+  %pre
+    HTTP/1.0 200 OK
+    Date: Mon, 11 Apr 2011 17:39:00 GMT
+    Server: WSGIServer/0.1 Python/2.6.5
+    Content-Type: text/plain
+    Content-Length: 12
+    
+    Hola Mundo!
+%article
+  %h3 Partes de una respuesta
+  %ul
+    %li Línea de estado
+    %li Encabezados
+    %li Cuerpo
+%article
+  %h3 Estados
+  %ul
+    %li 1xx y 2xx: todo salió bien
+    %li 3xx: el recurso está en otra parte
+    %li 4xx: error de cliente
+    %li 5xx: error de servidor
