@@ -53,12 +53,18 @@ Pero no nos vamos a complicar tanto, vamos a usar
 [rvm](http://beginrescueend.com/), un proyecto que permite manejar
 varias versiones de ruby en la misma máquina sin morir en el intento.
 
+Antes de instalarlo, vas a tener que instalar unas cuantas librerías de las cuales depende ruby
+
+	  sudo apt-get install build-essential openssl libreadline6 libreadline6-dev curl git-core zlib1g zlib1g-dev libssl-dev libyaml-dev libsqlite3-0 libsqlite3-dev sqlite3 libxml2-dev libxslt-dev autoconf libc6-dev ncurses-dev automake libtool bison subversion
+
 Para [instalarlo](http://beginrescueend.com/rvm/install/), corré en la
 línea de comandos:
 
-    sudo apt-get install curl libcurl3
+    sudo apt-get install curl libcurl3 
     curl -L get.rvm.io | bash -s stable
+    echo '[[ -s "$HOME/.rvm/scripts/rvm" ]] && . "$HOME/.rvm/scripts/rvm"' >> ~/.bash_profile
     source ~/.bash_profile
+    echo "source ~/.bash_profile" >> ~/.bashrc
 
 
 Para probar que todo salió bien, escribí:
