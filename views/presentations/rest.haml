@@ -1,0 +1,151 @@
+%article
+  %h1 REST sobre HTTP
+%article
+  %h2 ¿Qué es REST?
+  %p 
+    Representational State Transfer: una forma de <em>construir</em>
+    arquitecturas distribuidas que se se centra en las <em>representaciones de recursos</em>
+%article
+  %h2 Principios
+  :markdown
+    * Los recursos están identificados por URIs
+    * Los recursos se manipulan a través de sus representaciones
+    * Los mensajes son auto-contenidos y _sin estado_
+    * Los recursos pueden tener múltiples representaciones
+    * __Sustantivos, Verbos, Tipos de contenido__
+%article{:class => 'small'}
+  %h3 Identificación de recursos
+  %p Estamos interactuando con <em>recursos</em>: cada URL debería identificar a uno
+  %p Igual que en una jerarquía de archivos
+  %div{:class => 'build'}
+    %pre
+      blog.com/index.php?entradas=todas
+      blog.com/index.php?idEntrada=1
+      blog.com/index.php?idEntrada=1&ver=comentarios
+    %pre
+      blog.com/entradas
+      blog.com/entradas/1
+      blog.com/entradas/1/comentarios
+%article
+  %h3 Manipulación de recursos
+  :markdown
+    * Existe la tendencia (en arquitecturas como SOAP) a identificar *acciones* con URIs
+    * Ya hemos visto que las URLs <em>sólo</em> pueden identificar recursos
+    * ¿Y si queremos <em>manipular</em> un recurso?
+    * ¡Queremos CRUD! (Create-Read-Update-Destroy)
+%article
+  %h2 Manipulación de recursos: mal hecha
+  %pre
+    GET blog.com/entradas?todas=true
+    GET blog.com/entradas?idEntrada=1
+    GET blog.com/entradas?idEntrada=1&ver=comentarios
+    POST blog.com/entradaNueva
+    texto=loremipsum
+    POST blog.com/actualizarEntrada?idEntrada=1
+    texto=loremIpsum2
+    POST blog.com/borrarEntrada?idEntrada=1
+%article
+  %h2 Manipulación de recursos: bien hecha
+  %pre
+    GET blog.com/entradas
+    GET blog.com/entradas/1
+    GET blog.com/entradas/1/comentarios
+    POST blog.com/entradas
+    texto=loremipsum
+    PUT blog.com/entradas/1
+    texto=loremIpsum2
+    DELETE blog.com/entradas/1
+%article
+  %h3 HTTP al manipular recursos: solicitudes
+  :markdown
+    * __GET__: obtiene un recurso (**leer**)
+    * __POST__: agrega a un recurso (**crear**)
+    * __PUT__: transfiere (o sobreescribe) (**actualizar**)
+    * __DELETE__: elimina un recurso (**borrar**)
+    * PUT y DELETE son __idempotentes__: tendrán los mismos efectos siempre
+    * GET es un método seguro: no debe cambiar nada en el servidor
+    * Usar encabezados para definir cómo se está haciendo la solicitud y espera la respuesta
+%article
+  %h3 HTTP al manipular recursos: respuestas
+  :markdown
+    * El servidor tiene que comunicarnos sobre la operación con códigos de estado
+    * Los encabezados hablan de cómo está representado el recurso
+%article
+  %h3 Representación de recursos
+  :markdown
+    * Debería poder optarse por distintas representaciones de un recurso
+    * Cómo: encabezados
+    * Ejemplo: pictour
+%article
+  %h2 Representación de recursos
+  %pre
+    GET blog.com/entrada/1
+    Accept: text/plain
+  %pre
+    HTTP/1.1 200 OK
+    Content-Type: text/plain
+
+    Lorem ipsum dolor sic amet
+%article
+  %h2 Representación de recursos
+  %pre
+    GET blog.com/entrada/1
+    Accept: text/xml
+  %pre
+    HTTP/1.1 200 OK
+    Content-Type: application/json
+
+    {"entrada": {"id": 1, "contenido": "Lorem ipsum dolor sic amet"}}
+%article
+  %h2 Representación de recursos
+  %pre
+    GET blog.com/entrada/1
+    Accept: text/xml
+  %pre
+    HTTP/1.1 406 NOT ACCEPTABLE
+    Content-Type: text/xml
+%article
+  %h2 Estado
+  :markdown
+    * Por definición, el servidor __no debería__ recordar qué pasa entre solicitudes
+    * Cosas como autenticación e historia son responsabilidad del cliente
+%article
+  %h2 Ventajas
+  :markdown
+    * Aprovecharse del __cache__ de http: el header `Expires` dice por cuánto tiempo es válida una representación
+    * Al no mantener estado, se pueden balancear servidores
+    * Simplicidad en implementación de cliente y servidor
+%article
+  %h3 Ejemplos
+  :markdown
+    * Una simple API creada en <http://notas.herokuapp.com/>
+    * Para hacer estas pruebas, pueden usar <http://hurl.it/>
+    * Hay un [ejemplo de cómo comunicarse una API en python](https://github.com/rest-apis/rest-apis.github.com/blob/master/ejemplos/notes_api.py) en github
+%article{:class => "small"}
+  %h3 Ejercicio
+  %p Dado el host http://notas.herokuapp.com/ y que /notes es el recurso base, probar en hurl.it:
+  %ul
+    %li Listar todas las notas en formato application/json
+    %li Mostrar una nota en formato text/plain
+    %li Agregar una nueva nota (los campos son <tt>title</tt> y <tt>content</tt>)
+    %li Eliminar una nota existente
+    %li ¿Qué pasa al tratar de agregar una nota con título repetido o contenido vacío?
+    %li Cambiar el título de una nota existente
+    %li ¿Qué pasa al tratar de eliminar o actualizar una nota que no existe?
+%article
+  %h3 Ejercicio
+  %p ¿Cómo haría un API para un servicio como thingler.com?
+%article
+  %h3 Ejercicio
+  %p Crear un servicio en python con citas célebres, poder obtener todas las citas, un número limitado o las citas por autor.
+  :markdown
+    El código vivirá aquí <https://github.com/rest-apis/quotes>
+    
+%article
+  %h3 Referencias y lectura adicional
+  :markdown
+    * <http://www.ics.uci.edu/~fielding/pubs/dissertation/top.htm>
+    * <http://dret.net/lectures/services-fall06/rest>
+    * <http://rest.elkstein.org/>
+    * <http://blog.steveklabnik.com/2011/07/03/nobody-understands-rest-or-http.html>
+    * <http://timelessrepo.com/haters-gonna-hateoas>
