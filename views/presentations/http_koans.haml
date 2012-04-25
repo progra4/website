@@ -1,0 +1,177 @@
+%article
+  %h1 HTTP Koans
+%article
+  %p Vas a ver un comando y luego unas preguntas. Correlo y contestalas.
+%article
+  :markdown
+
+          curl -v httparty.herokuapp.com
+
+    * ¿Qué estado tuvo la respuesta?
+    * ¿Quién es el host?
+    * ¿Qué ruta estamos pidiendo?
+    * Existe un encabezado `Location` ¿para qué servirá?
+    * ¿Nos está mandando a algún lado el servidor? ¿cómo llegamos allí?
+
+%article
+  :markdown
+
+          curl -v -I httparty.herokuapp.com/quotes
+
+    * ¿Qué pasa si abrimos esa URL en un web browser?
+    * ¿Qué estado tuvo la respuesta?
+    * ¿Qué pasa si no usamos la opción `-I`? ¿Qué hace esa opción?
+
+%article
+  :markdown
+
+          curl -v -H "Accept: text/plain" httparty.herokuapp.com/quotes
+
+    * ¿En qué cambió la respuesta?
+    * ¿Por qué cambió?
+    * ¿Qué hace la opción `-H`?
+
+%article
+  :markdown
+
+          curl -I -H "Accept: text/xml" httparty.herokuapp.com/quotes
+
+    * ¿Qué nos está queriendo decir el servidor?
+
+%article
+  :markdown
+
+          curl -I httparty.herokuapp.com/foo
+
+    * ¿Qué nos está queriendo decir el servidor?
+
+%article{class: "smaller"}
+  :markdown
+
+          curl -v -H "Accept-Language: es" -H "Accept: text/plain" httparty.herokuapp.com/quotes 
+
+    * ¿Ahora cómo cambió la respuesta?
+    * ¿Para qué nos sirven los encabezados?
+
+%article{class: "smaller"}
+  :markdown
+
+           curl -H "Accept: text/plain" "httparty.herokuapp.com/quotes?limit=3&lang=es"
+
+    * ¿Cuál es el querystring?
+    * ¿Qué parámetros le estamos dando?
+    * ¿Para qué sirve un querystring?
+
+
+%article
+  :markdown
+
+           curl -H "Accept: text/plain" "httparty.herokuapp.com/quotes/1"
+
+    * ¿Cuál es la ruta?
+    * ¿Qué relación tiene con la ruta que hemos estado usando hasta ahora?
+    * ¿Qué tipo tiene el contenido de la respuesta? ¿Cómo podríamos hacer que fuera `html`?
+    * ¿Cómo sabemos qué posibles citas existen? (una lista de todas)
+    * Obtené otras tres citas individuales, una por una.
+    * En base a este ejemplo: ¿cómo obtener una cita específica?
+
+%article
+  :markdown
+
+           curl -H "Accept: text/plain" "httparty.herokuapp.com/quotes/random"
+
+    * ¿Qué relación tiene con la ruta que acabamos de usar?
+    * ¿Qué podemos decir de la forma en que están hechas las rutas en esta aplicación?
+
+%article{class: "smaller"}
+  :markdown
+
+           curl -v -X POST --data "author=Walt+Whitman&content=All+truths+wait+in+all+things"\
+           -H "Accept: text/plain" httparty.herokuapp.com/quotes
+
+    * ¿Qué acabamos de hacer? ¿Nos ayuda el código de estado de la respuesta?
+    * ¿Qué pasa si lo ejecutamos otra vez?
+    * ¿Para qué servirán las opciones `-X` y `--data` en `curl`?
+    * ¿Nos sirve de algo el encabezado `Location`?
+
+%article{class: "smaller"}
+  :markdown
+
+           curl -v -X POST --data "content=All+truths+wait+in+all+things"\
+           -H "Accept: text/plain" httparty.herokuapp.com/quotes
+
+    * ¿Qué acabamos de hacer? ¿Nos ayuda el código de estado de la respuesta?
+    * ¿En qué difiere esta solicitud de la anterior?
+    * ¿Nos ayuda en algo el cuerpo de la respuesta? Si lo que pasó fue nuestra culpa, ¿cómo arreglarlo?
+
+%article{class: "smaller"}
+  :markdown
+
+           curl -H "Accept: text/plain" httparty.herokuapp.com/quotes/XXXX
+           curl -X DELETE -I -H "Accept: text/plain" httparty.herokuapp.com/quotes/XXXX
+           curl -IH "Accept: text/plain" httparty.herokuapp.com/quotes/XXXX
+
+    * En el último ejercicio que te funcionó lo que hiciste fue **crear** un recurso en el servidor,
+      había un número allí en el cuerpo y, si te fijaste en el encabezado `Location`, era ese número en la URL;
+      ese número identifica al recurso.
+      De ahora en adelante, cuando veás `XXXX` en los ejemplos, es porque quiero que creés un recurso, tomés
+      el número que lo identifica y sustituyás `XXXX` con eso: XXXX será tu propio recurso, recién creado.
+    * ¿Qué acabás de hacer?
+    * ¿Qué información util te da el servidor en el código de estado?
+    * ¿Qué diferencia hay entre el primer y tercer comandos?
+    * ¿Qué pasa si lo hacés otra vez?
+
+%article{class: "smaller"}
+  :markdown
+           curl -H "Accept: text/plain" httparty.herokuapp.com/quotes/XXXX
+           curl -v -X PUT --data "author=Walt+Whitman&content=All+truths+wait+in+all+things"\
+           -H "Accept: text/plain" httparty.herokuapp.com/quotes/XXXX
+           curl -H "Accept: text/plain" httparty.herokuapp.com/quotes/XXXX
+
+    * ¿Qué acabás de hacer?
+    * ¿Qué diferencia hay entre el primer y tercer comandos?
+    * ¿Qué pasa si lo hacés otra vez?
+
+%article{class: "smaller"}
+  :markdown
+
+           curl -c cookies -I httparty.herokuapp.com/quotes/1
+           curl -v -c cookies -b cookies -I httparty.herokuapp.com/quotes/10
+           curl -c cookies -b cookies -H "Accept: text/plain" httparty.herokuapp.com/quotes/random
+           curl -c cookies -b cookies -H "Accept: text/plain" httparty.herokuapp.com/quotes/read
+           curl  -H "Accept: text/plain" httparty.herokuapp.com/quotes/read
+
+    * ¿Qué relación hay entre las primeras tres línea y la cuarta?
+    * ¿Hay diferencia entre la salida de la cuarta línea y la quinta?
+    * ¿Qué papel juega el archivo cookies?
+    * ¿Qué tendrá de mágico el archivo cookies? (pista: `cat cookies`)
+    * En los encabezados de la solicitud y respuestas de la segunda línea, ¿habrá alguna pista que nos diga
+      qué tiene que ver el contenido del archivo cookies con el comportamiento de este ejemplo?
+
+%article
+  :markdown
+
+           curl -H "Accept: application/json" "httparty.herokuapp.com/quotes/1"
+
+    * ¿Qué diferencia hay entre esta solicitud y otras?
+    * ¿A qué se parece el cuerpo de la respuesta?
+    
+    Qué pasa si copiás esa respuesta, abrís un irb y hacés esto:
+
+            require 'json'
+            a = 'LA_RESPUESTA'
+            JSON.parse(a)
+
+%article
+  %h1 Take a REST (cuando llegués aquí, decime)
+
+%article
+  %h2 Reto/Tarea
+  :markdown
+    Ahora que estás familiarizado con los términos de HTTP, y la magia de JSON, usá esta documentación:
+    <http://ruby-doc.org/stdlib-1.9.3/libdoc/net/http/rdoc/Net/HTTP.html>
+    para escribir un programa en ruby que: obtenga una lista de todas las citas, elija tres al azar
+    y luego las solicite individualmente usando cookies en las solicitudes.
+    Y que luego haga una solicitud a `/quotes/read`
+    y se asegure que las tres citas que eligió estén allí. Pista: pedí todo en formato `application/json` 
+
