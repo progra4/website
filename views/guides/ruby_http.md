@@ -4,6 +4,10 @@ El propósito de esta guía es doble: que aprendamos lo básico de escribir un p
 
 Para aprender a escribir programas de servidor, trataremos de reproducir una parte de la funcionalidad [del sitio que usamos para aprender http](http://httparty.heroku.com/) 
 
+Todo el progreso del proyecto estará aquí:
+
+<https://github.com/progra4/quotes>
+
 ##0. Preliminares
 
 
@@ -312,13 +316,371 @@ Una ayuda: esta rutina de agregar archivos que __ya conocía git__ y luego hacer
 
 	git commit -am 'explorando el entorno'
 
-#4. Empezando a funcionar
+##4. Empezando a funcionar: el asunto de los _modelos_
 
-Hacer, con lo de env, lo de las quotes
+Hemos llegado hasta este punto y ya tenemos una idea de cómo funcionaría una aplicación web: en cada solicitud que recibe, reacciona de alguna forma al entorno y devuelve los elementos de una respuesta. Empecemos, entonces, a replicar la aplicación que queríamos reproducir.
 
-introducir git branching
+Al diseñar una aplicación web, nos tenemos que hacer una simple pregunta:
 
-#5. Pausa: limpiando el código
+__¿Cuáles son los recursos, cómo puedo ver esto en términos de recursos y su manipulación?__
 
-Cambiarlo, en un branch, y luego hacer merge ¿cuándo introducir git reset/checkout?
+Esa pregunta nos lleva a pensar en algunas otras, por ejemplo:
 
+* ¿Qué URLs estarán involucradas en nuestro proyecto?
+* ¿Cómo mostrar los recursos?
+* ¿Cómo se podrán crear/modificar/destruir los recursos?
+* ¿Cómo interactúan entre sí?
+
+En este caso, la respuesta es fácil: __los recursos son las citas, se pueden mostrar en una lista o individualmente y cada cita se puede crear, actualizar o destruir__. Es la aplicación más sencilla posible, pero cualquier otra aplicación web sólo es una elaboración de este mismo concepto.
+
+Empecemos con lo más fácil: asumiendo que ya existen las citas, ¿cómo mostraríamos una lista de éstas?
+
+Primero, ¿cómo representamos las citas? Podríamos verlas como instancias de una clase `Quote`
+
+Algo así:
+
+	class Quote
+		attr_accessor :author, :content, :language
+		def initialize(author, content, language = 'en')
+			@author = author
+			@content = content
+			@language = language
+		end
+	end
+
+Nos queda el problema de cómo identificar __únicamente__ cada cita, podríamos identificarlas por su lugar en la lista, así serían la cita `1`, la `2`, etc. Pero ¿qué va a pasar cuando empecemos a borrar citas? Si borramos la cita `2`, la que estaba en el lugar `3` va a tomar su lugar y ¡ninguna va a tener el identificador que tenía antes! Podríamos complicarnos y hacer esto funcionar, pero, afortunadamente, hay otra salida fácil: números aleatorios únicos.
+
+El concepto de un `uuid` (universally unique identifier) es el de asignar un identificador tal que nunca se vuelva a repetir (¡hablando de único!) y ruby 1.9.3 incluye el módulo `SecureRandom` que hace precisamente esto, probémoslo en irb:
+
+	1.9.3p125 :001 > require 'securerandom'
+	 => true 
+	1.9.3p125 :002 > SecureRandom.uuid
+	 => "75ba2061-1156-405d-a09a-f795ca32e110"
+
+(obviamente a vos te va a salir algo diferente)
+
+No es tan conveniente como tener un solo entero, pero es suficiente.
+
+Agregemos este conocimiento a la clase `Quote`
+	
+	require 'securerandom'
+	class Quote
+		attr_accessor :author, :content, :language
+		def initialize(author, content, language = 'en')
+			@id = SecureRandom.uuid
+			@author = author
+			@content = content
+			@language = language
+		end
+	end
+
+
+Por último, necesitaríamos una forma de __representar__ una instancia de `Quote`, así que agreguemos un método `as_text`:
+
+	class Quote
+		def as_text
+			  "
+       		   #{id}.
+        	  #{content}
+              --#{author}
+      		  "
+		end
+	end
+
+Ahora bien, ya que vamos a estar creando citas, esta sintaxis es un poco tediosa:
+
+	cita_1 = Quote.new("el autor", "el contenido")
+	cita_2 = Quote.new("otro autor", "otro contenido")
+	…
+	cita_n = Quote.new("miles de autores", "miles de contenidos")
+	citas = [cita_1, cita_2, …, cita_n]
+
+Primero que todo, tenemos que estarnos acordandos del orden de los parámetros, y, luego, nos estamos repitiendo un poco.
+
+Resolveríamos el primer problema si pudieramos hacer algo como
+
+	cita1 = Quote.create(content: "el contenido", author: "el autor")
+	
+Y el segundo, si pudieramos hacer algo como
+
+	citas = Quote.create([
+		{content: "primer contenido", author: "primer autor"},
+		{content: "segundo contenido", author: "segundo autor"}
+	])
+	
+Para resolver dos problemas de un solo, agreguemos este __método de clase__:
+
+	class Quote
+	  def self.create(hash_or_array)
+    	if hash_or_array.is_a?(Hash)
+      		Quote.new(hsh[:author], hsh[:content], hsh[:language])
+    	elsif hash_or_array.is_a?(Array) && hash_or_array.all?{|e| e.is_a?(Hash)}
+      		hash_or_array.map{|h|  Quote.create(h)  }
+    	end
+  	  end
+	end
+	
+
+De modo que nuestra lista inicial de citas se podría ver así:
+
+	 QUOTES = Quote.create([
+	      {
+	        author: "Ralph Waldo Emerson",
+	        content: "Every sweet has its sour; every evil its good.",
+	        language: "en"
+	      },
+	
+	      {
+	        author: "Siddhartha Gautama",
+	        content: "El dolor es inevitable pero el sufrimiento es opcional.",
+	        language: "es"
+	      },
+	      {
+	        author: "Walt Whitman",
+	        content: "Be curious, not judgmental",
+	        language: "en"
+	      }
+	  ])
+
+
+Lo que acabamos de hacer, decidir qué recursos habría y cómo los representaríamos como objetos que existen para el servidor, se conoce como la _capa de datos_, o, __diseñar los modelos__. Cada clase que represente un recurso, entonces, es un _modelo_.
+
+Por último, ya que estamos encapsulando el concepto de _modelo_, ¿dónde hemos de guardar los modelos que creemos? Podría ser un archivo o una base de datos, no importa; pero a nivel de ruby, es mejor verlos como guardados por la clase misma, así:
+
+	class Quote
+		@@instances = []
+	end
+	
+La idea es que toda instancia que creemos quede "guardada" en un arreglo que será miembro de la clase.
+
+Así que modificamos el constructor:
+
+	class Quote
+		def initialize(a, c, l)
+		 #lo que ya estaba…
+		 
+		 @@instances << self
+		end
+	end
+	
+Y va a haber un par de operaciones que necesitaremos constantemente: obtener todas las citas y encontrar una cita específica (usando su identificador único). Así que agreguemos métodos de clase que usen ese arreglo:
+
+	class Quote
+		def self.all
+			@@instances
+		end
+		
+		def self.find(id)
+			@@instances.find do |instance|
+				instance.id == id
+			end
+		end
+	end
+
+Todo esto que acabamos de hacer lo podemos poner en un archivo aparte, llamémoslo `models.rb`, y es una perfecta excusa para usar un _módulo_ de ruby:
+
+	require 'securerandom'
+	module Models
+	  class Quote
+	    attr_accessor :author, :content, :language
+	    attr_reader :id
+	    
+	    @@instances = []
+	
+	    def initialize(author, content, language = 'en')
+	      @id = SecureRandom.uuid
+	      @author = author
+	      @content = content
+	      @language = language
+	      
+	      @@instances << self
+	    end
+	
+	    def as_text
+	      "
+	        #{id}.
+	        #{content}
+	        --#{author}
+	      "
+	    end
+	
+	    def self.create(hash_or_array)
+	      if hash_or_array.is_a?(Hash)
+	        hsh = hash_or_array
+	        Quote.new(hsh[:author], hsh[:content], hsh[:language])
+	      elsif hash_or_array.is_a?(Array) && hash_or_array.all?{|e| e.is_a?(Hash)}
+	        hash_or_array.map{|h|  Quote.create(h)  }
+	      end
+	    end
+	    
+	    def self.all
+			@@instances
+		end
+		
+		def self.find(id)
+			@@instances.find do |instance|
+				instance.id == id
+			end
+		end
+	  end
+	  
+	end
+	
+	#creemos unas cuantas por defecto
+	 Models::Quote.create([
+	      {
+	        author: "Ralph Waldo Emerson",
+	        content: "Every sweet has its sour; every evil its good.",
+	        language: "en"
+	      },
+	      {
+	        author: "Winston Churchill",
+	        content: "We make a living by what we get, we make a life by what we give",
+	        language: "en"
+	      },
+	      {
+	        author: "Siddhartha Gautama",
+	        content: "El dolor es inevitable pero el sufrimiento es opcional.",
+	        language: "es"
+	      },
+	      {
+	        author: "Walt Whitman",
+	        content: "Be curious, not judgmental",
+	        language: "en"
+	      }
+	  ])
+	
+
+
+Podemos probar todo en irb con:
+
+	1.9.3p125 :001 > require './models'
+	 => true 
+	1.9.3p125 :002 > Models::Quote.all
+	 => [#<Models::Quote:0x007fcd489cd930 @id="e0536489-04fd-4583-95b2-bd824acd7aee", @author="Ralph Waldo Emerson", @content="Every sweet has its sour; every evil its good.", @language="en">, #<Models::Quote:0x007fcd489cd688 @id="367f10a6-d27e-49e5-999f-32d23118223c", @author="Winston Churchill", @content="We make a living by what we get, we make a life by what we give", @language="en">, #<Models::Quote:0x007fcd489cd548 @id="e46cdc5b-004d-4956-8ab4-5d9785ec9653", @author="Siddhartha Gautama", @content="El dolor es inevitable pero el sufrimiento es opcional.", @language="es">, #<Models::Quote:0x007fcd489cd408 @id="3c086c85-f865-4241-8a0f-81cabd0ef5f5", @author="Walt Whitman", @content="Be curious, not judgmental", @language="en">] 
+	 
+	
+###grabando nuestro progreso
+
+Esta vez no tocamos los archivos de nuestro proyecto que git ya conoce (asegurate con `git status` y `git diff`), así que sólo haremos esto:
+
+	git add models.rb
+	git commit -m 'creando los modelos'
+	
+Pero, en el siguiente cambio que hagamos, vamos a cambiar radicalmente el archivo `app.rb`. Si te da miedo lo que pueda pasar, git tiene una solución para eso: [branches](http://learn.github.com/p/branching.html): "versiones alternativas" de nuestro proyecto. La idea de un _branch_ es partir desde un punto conocido, experimentar un rato y, si no funciona, volver al punto conocido (y, si funciona, implementar el experimento). 
+
+En git uno siempre está trabajando sobre un branch, el nombre por defecto es `master`.  Los branches pueden tener nombres descriptivos, como `experimento`, que determinen de qué se trata toda la historia que representan. 
+
+Creemos el branch `controladores` (de eso se trata lo que sigue):
+
+	git branch controladores
+	git checkout controladores
+	git branch
+		* controladores
+  		master
+
+Cuando enviamos un parámetro al comando `git branch`, él crea un `branch` que parte de  la rama actual. El comando `git checkout` nos permite cambiarnos de branch y el comando `git branch` sin parámetros, nos permite ver los branches que existen (marca el actual con un asterisco )
+
+
+Ahora, cualquier commit que hagamos, quedará en la historia del branch `controladores`, si nos arrepentimos de lo que hicimos allí, podríamos volver a `master` y todo estaría como lo dejamos antes de irnos a `controladores`
+
+##5. Volviendo a la web: mostrando una colección de modelos o un modelo individual
+
+
+Ahora que resolvimos el problema de representar los recursos (_modelos_) en esta aplicación, veamos cómo representarlos como parte de una respuesta HTTP.
+
+Ahora trataremos con el concepto de __controlador__: no es más que código que está al tanto de las _solicitudes_ y los _recursos_, y que sabe cómo, en respuesta a las primeras, puede manipular los segundos.
+
+Lo que nosotros queremos, primero que todo, es código que tome la lista de modelos y la devuelva en una respuesta. Hagamos eso:
+
+	require './models'
+	
+	class WebApp
+	  def call(env)
+	    method = env["REQUEST_METHOD"]
+	    status, body = case method
+	      when "GET"
+	        [200, Models::Quote.all.map(&:as_text).join("\n")]
+	      else
+	        [405, ""]
+	      end
+	
+	    [
+	     status,
+	     #los valores de los headers *deben* ser String
+	     {'Content-Type' => 'text/plain', 'Content-Length' => body.size.to_s},
+	     [body]
+	    ]
+	  end
+	end
+
+Como ves, estamos usando el entorno para saber qué método se ha usado y estamos respondiendo con encabezados útiles (agregamos `Content-Length` para que el cliente sepa cuántos bytes tiene el cuerpo de la respuesta)
+
+No esperemos más y __guardemos nuestro progreso hasta ahora__: 
+
+
+	git commit -am 'mostrando toda la lista de modelos'
+
+
+Lo siguiente que se debería poder hacer, es mostrar una sola cita, pero aquí tenemos dos problemas: ¿cómo sabemos qué cita se está pidiendo? y ¿cómo diferenciamos cuando se trate de _obtener_ una cita de cuando se trate de _obtener_ toda la lista?
+
+Usamos expresiones regulares:
+
+	require './models'
+	class WebApp
+	  def call(env)
+	    method = env["REQUEST_METHOD"]
+	    path   = env["REQUEST_PATH"]
+	
+	    collection_pattern = /\/quotes$/
+	    member_pattern     = /\/quotes\/([a-z0-9\-]+)/
+	
+	    status, body = case method
+	      when "GET"
+	        if path =~ collection_pattern
+	          [200, Models::Quote.all.map(&:as_text).join("\n")]
+	        elsif path =~ member_pattern
+	          id = path.match(member_pattern)[1]
+	          quote = Models::Quote.find(id)
+	          if quote
+	            [200, quote.as_text]
+	          else
+	            [404, ""]
+	          end
+	        else
+	          [501, "Not Implemented"]
+	        end
+	      else
+	        [405, ""]
+	      end
+	
+	    [
+	     status,
+	     #los valores de los headers *deben* ser String
+	     {'Content-Type' => 'text/plain', 'Content-Length' => body.size.to_s},
+	     [body]
+	    ]
+	  end
+	end
+
+Guardemos nuestro progreso:
+
+	git commit -am 'obteniendo o la colección o un miembro'
+
+###regresando a `master`
+
+Como nuestro progreso en la branch `controladores` se ve satisfactorio, estamos listos para regresar a `master`. Podemos, antes, ver en qué han cambiado con 
+
+	git diff master controladores
+	
+Que mostrará como adiciones todo lo que se introduzca en la branch `controladores` respecto a `master`
+
+Para unir los cambios que hicimos aquí, regresemos a master
+
+	git checkout master
+	
+Y unámoslos con el comando `git merge`
+
+	git merge controladores
+	
+Y ahora, si vemos `git log`, veremos las dos historias unidas.

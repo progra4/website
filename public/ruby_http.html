@@ -1,0 +1,872 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="http://yandex.st/highlightjs/6.2/highlight.min.js"></script>
+<link rel="stylesheet" href="http://yandex.st/highlightjs/6.2/styles/default.min.css">
+<script>hljs.initHighlightingOnLoad();</script>
+<style>
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+blockquote {
+    margin: 0;
+    padding: 0;
+}
+body {
+    font-family: "Helvetica Neue", Helvetica, "Hiragino Sans GB", Arial, sans-serif;
+    font-size: 13px;
+    line-height: 18px;
+    color: #737373;
+    margin: 10px 13px 10px 13px;
+}
+a {
+    color: #0069d6;
+}
+a:hover {
+    color: #0050a3;
+    text-decoration: none;
+}
+a img {
+    border: none;
+}
+p {
+    margin-bottom: 9px;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    color: #404040;
+    line-height: 36px;
+}
+h1 {
+    margin-bottom: 18px;
+    font-size: 30px;
+}
+h2 {
+    font-size: 24px;
+}
+h3 {
+    font-size: 18px;
+}
+h4 {
+    font-size: 16px;
+}
+h5 {
+    font-size: 14px;
+}
+h6 {
+    font-size: 13px;
+}
+hr {
+    margin: 0 0 19px;
+    border: 0;
+    border-bottom: 1px solid #ccc;
+}
+blockquote {
+    padding: 13px 13px 21px 15px;
+    margin-bottom: 18px;
+    font-family:georgia,serif;
+    font-style: italic;
+}
+blockquote:before {
+    content:"\201C";
+    font-size:40px;
+    margin-left:-10px;
+    font-family:georgia,serif;
+    color:#eee;
+}
+blockquote p {
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 18px;
+    margin-bottom: 0;
+    font-style: italic;
+}
+code, pre {
+    font-family: Monaco, Andale Mono, Courier New, monospace;
+}
+code {
+    background-color: #fee9cc;
+    color: rgba(0, 0, 0, 0.75);
+    padding: 1px 3px;
+    font-size: 12px;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+}
+pre {
+    display: block;
+    padding: 14px;
+    margin: 0 0 18px;
+    line-height: 16px;
+    font-size: 11px;
+    border: 1px solid #d9d9d9;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+pre code {
+    background-color: #fff;
+    color:#737373;
+    font-size: 11px;
+    padding: 0;
+}
+@media screen and (min-width: 768px) {
+    body {
+        width: 748px;
+        margin:10px auto;
+    }
+}
+</style>
+<title>Sirviendo HTTP con ruby (y una introducción a git)</title>
+</head>
+<body>
+<h1>Sirviendo HTTP con ruby (y una introducción a git)</h1>
+
+<p>El propósito de esta guía es doble: que aprendamos lo básico de escribir un programa de servidor y que aprendamos a guardar nuestro progreso con <a href="http://gitref.org/">git</a></p>
+
+<p>Para aprender a escribir programas de servidor, trataremos de reproducir una parte de la funcionalidad <a href="http://httparty.heroku.com/">del sitio que usamos para aprender http</a></p>
+
+<p>Todo el progreso del proyecto estará aquí:</p>
+
+<p><a href="https://github.com/progra4/quotes">https://github.com/progra4/quotes</a></p>
+
+<h2>0. Preliminares</h2>
+
+<h3>Configurando git</h3>
+
+<p><strong>Si es la primera vez que usamos git</strong>, tenemos que decirle quiénes somos, porque con nuestra &ldquo;identidad&rdquo; va a firmar cada cambio que hagamos (esto sirve mucho cuando trabajamos en grupo: así sabemos quién hace qué). Obviamente, te toca sustituir<code>TU NOMBRE</code> por tu propio nombre y <code>tucorreo@dominio.com</code> por tu correo electrónico.</p>
+
+<pre><code>git config --global user.name "TU NOMBRE"
+git config --global user.email tucorreo@dominio.com
+</code></pre>
+
+<p>Como vamos a usar git tanto, vamos a agregar otra configuración que le pone colores a toda la información que nos mostrará git al usarlo</p>
+
+<pre><code>git config --global color.ui true
+</code></pre>
+
+<p>Ahora que ya configuramos git, podemos empezar nuestro proyecto.</p>
+
+<p>Para poder guardar el progreso de un proyecto con git, tenemos que tener una carpeta exclusiva para él (dentro de esta carpeta pueden haber todas las sub-carpetas que queramos). Así que creemos una carpeta para el trabajo que haremos hoy.</p>
+
+<pre><code>mkdir quotes
+</code></pre>
+
+<p>Para que git pueda ir guardando nuestro progreso, tenemos que &ldquo;iniciarlo&rdquo; dentro de nuestra carpeta (con esto se creará la carpeta <code>.git</code>, que contendrá el &ldquo;historial&rdquo; de nuestro progreso, a este historial se le llama el <code>index</code> de git)</p>
+
+<pre><code>cd quotes
+git init
+</code></pre>
+
+<p>Por ahora no haremos nada más con git, empecemos con el proyecto en sí.</p>
+
+<h3>Librerías necesarias</h3>
+
+<p>Para este ejemplo, necesitamos instalar una librería de ruby que nos permite escribir servidores: <a href="http://rack.rubyforge.org/">rack</a>. Para instalarla, ejecutá lo siguiente</p>
+
+<pre><code>gem install rack
+</code></pre>
+
+<h2>1. La aplicación web más básica</h2>
+
+<p>Un programa de lado del servidor no es más que un script que siempre está escuchando a ver si le llegan solicitudes. Como se menciona arriba,</p>
+
+<p>Las reglas de rack son:</p>
+
+<ol>
+<li>Una aplicación consiste en un objeto que responda al método <code>call</code></li>
+<li>El método recibirá un sólo parámetro: el entorno, que contiene a la solicitud y todas las variables del servidor necesarias para poder responder bien (encabezados, cuerpo de la solicitud, etc.)</li>
+<li>El método deberá retornar un arreglo para construir con él la respuesta, los elementos del arreglo deben contener, en este orden: el código de estado, los encabezados y un iterable (algo que responda a <code>each</code>) que se usará para construir el cuerpo de la respuesta.</li>
+</ol>
+
+
+<p>Bajo esas reglas, la aplicación más sencilla para rack se vería así:</p>
+
+<pre><code>lambda do |env|
+    [200, {}, ['Hola Mundo']]
+end
+</code></pre>
+
+<p>Un objeto <code>lambda</code> es una instancia de la clase <code>Proc</code>. La clase <code>Proc</code> define el método <code>call</code> (para referirnos a métodos de instancia, podemos usar esta convención: <code>Proc#call</code> - que es, <code>Clase#método</code>).</p>
+
+<p>Obviamente, para hacerla funcionar, hay que poner un par de instrucciones extra: importar rack y decirle al script que se quede escuchando solicitudes y responda usando nuestra función:</p>
+
+<pre><code>require 'rack'
+h = lambda do |env|
+    [200, {}, ['Hola Mundo']]
+end
+Rack::Handler::WEBrick.run(h, Port: 3000)
+</code></pre>
+
+<p>Una convención que hay es usar una clase en lugar de un <code>lambda</code>, en esa clase definimos el método call y le damos a <code>rack</code> una instancia de ella, así:</p>
+
+<pre><code>require 'rack'  
+class WebApp
+  def call(env)
+    [200, {}, ['Hola Mundo']]
+  end
+end
+Rack::Handler::WEBrick.run(WebApp.new, Port: 3000)
+</code></pre>
+
+<p>Para ejecutar nuestro script, podemos usar <code>ruby app.rb</code>. Y entrar a <code>localhost:3000/</code> en un browser o hacer <code>curl localhost:3000</code> (tené en cuenta que la aplicación es tan básica que ni siquiera se puede detener, hay que matar el proceso o cerrar la terminal y abrir otra)</p>
+
+<p>Guardá lo anterior en un archivo llamado <code>app.rb</code> dentro de la carpeta que creaste para el proyecto (según lo dicho arriba, <code>quotes</code>)</p>
+
+<h3>guardando nuestro progreso</h3>
+
+<p>En este punto ya tenés <em>algo</em> que funciona. La costumbre de alguien que usa git es decirse a sí mismo &ldquo;ok, en este momento tengo algo que funciona, quiero recordar este momento para siempre&rdquo;. Hacer eso es tan sencillo como decirle a git &ldquo;hey git, acordate de este momento para siempre, porque aquí parece ir todo bien&rdquo;. Veamos cómo hacerlo:</p>
+
+<p>Hay dos pasos para que git recuerde una de nuestras pequeñas victorias: primero, enemos que decirle a git <em>qué</em> archivos son importantes en este momento. Por ejemplo, quizá en tu proyecto haya varios archivos pero lo importante de ahorita sólo está en unos cuantos. Para decirle a git que los cambios que hicimos en un archivo son relevantes, usamos la instrucción <code>git add</code>:</p>
+
+<pre><code>git add app.rb
+</code></pre>
+
+<p>Aquí le decimos: &ldquo;git, acabo de hacer algo importante con <code>app.rb</code>, preparate para acordarte&rdquo;. Pero <em>agregar</em> un archivo no es el final de la historia, para que git guarde nuestro progreso usamos la instrucción <code>git commit</code>, que es el segundo paso:</p>
+
+<pre><code>git commit -m 'mi primera web app'
+</code></pre>
+
+<p>Que va a devolver un mensaje parecido a este:</p>
+
+<pre><code>[master (root-commit) cd7dde2] mi primera web app
+1 files changed, 7 insertions(+), 0 deletions(-)
+create mode 100644 app.rb
+</code></pre>
+
+<p>Que simplemente nos da algunas estadísticas de los cambios que acabamos de guardar.</p>
+
+<p>si has jugado videojuegos, podés ver a la instrucción <code>git commit</code> como algo que crea un <em>checkpoint</em>: estamos creando un recuerdo. La opción <code>-m</code> nos permite agregar un mensaje descriptivo que nos ayudará a recordar de qué trataba este momento.</p>
+
+<p><strong>¡Listo!</strong> ahora git se acordará para siempre de este momento. ¿Cómo sabemos que se acuerda? bueno, podemos preguntarle con la instrucción <code>git log</code>:</p>
+
+<pre><code>git log
+</code></pre>
+
+<p>Nos debería mostrar algo similar a:</p>
+
+<pre><code>commit 9d36cb55f9a207e37b48b7fcbddbe85f2dd98353
+Author: Juan Pérez &lt;juanperez@gmail.com&gt;
+Date:   Tue May 1 11:04:26 2012 -0600
+
+    mi primera web app
+</code></pre>
+
+<p>Si te fijás, hay un par de cosas interesantes que notar allí:</p>
+
+<ul>
+<li>la primera línea, la que dice <code>commit</code>, nos muestra un <strong>identificador único</strong>: con esto podemos referirnos a este punto en la historia (así, podemos decir, &ldquo;ah bueno, lo que yo hice en el commit "9d36cb55f9a207e37b48b7fcbddbe85f2dd98353&rdquo; fue tal o cual cosa"). A este identificador único nos referiremos como <code>hash</code> de ahora en adelante</li>
+<li>Nos muestra <strong>quién</strong> hizo el commit y <strong>cuándo</strong> lo hizo</li>
+<li>Nos muestra el mensaje. Este mensaje debería ser una <strong>descripción</strong> de lo que hicimos en ese momento de la historia.</li>
+</ul>
+
+
+<h2>2. La aplicación web más básica que sigue estándares</h2>
+
+<p>Una convención más que se tiene al usar <code>rack</code> para escribir servidores es tener dos archivos: uno dedicado al código de la aplicación y otro como &ldquo;entrada&rdquo; para el servidor. Este último se conoce como el <code>rackup</code>, probemos eso:</p>
+
+<pre><code>#app.rb
+class WebApp
+  def call(env)
+    [200, {'Content-Type' =&gt; "text/plain"}, ['Hola Rackup']]
+  end
+end
+
+#start.ru
+require './app'
+run WebApp.new
+</code></pre>
+
+<p>(tendríamos dos archivos ahora: <code>app.rb</code> y <code>start.ru</code>)</p>
+
+<p>Para correr una app con un archivo para <code>rackup</code>, usamos el comando <code>rackup</code> que rack instaló por nosotros:</p>
+
+<pre><code>rackup -p 3000 start.ru
+</code></pre>
+
+<p>Esto debería tener un efecto similar a lo anterior, sólo que esta vez separamos al programa del servidor en sí de <em>cómo</em> es ejecutado. Esta distinción es importante: vos podés escribir código de servidor y no deberías preocuparte de <em>cómo</em> será ejecutado: puede ser usando <code>rackup</code> o cualquier otra cosa, eso no debería afectar el código en sí.</p>
+
+<h3>guardando nuestro progreso</h3>
+
+<p>Ahora que ya tenemos un nuevo cambio que funciona, podríamos grabar con git otra vez. Pero, ¿de qué sirve guardar nuestro progreso si no sabemos <em>cuál</em> fue nuestro progreso?</p>
+
+<p>Afortunadamente, también le podemos preguntar eso a git, con el comando <code>git status</code></p>
+
+<pre><code>git status
+</code></pre>
+
+<p>que nos mostrará algo similar a esto:</p>
+
+<pre><code># On branch master
+# Changes not staged for commit:
+#   (use "git add &lt;file&gt;..." to update what will be committed)
+#   (use "git checkout -- &lt;file&gt;..." to discard changes in working directory)
+#
+#   modified:   app.rb
+#
+# Untracked files:
+#   (use "git add &lt;file&gt;..." to include in what will be committed)
+#
+#   start.ru
+no changes added to commit (use "git add" and/or "git commit -a")
+</code></pre>
+
+<p>Lo que git nos está queriendo decir:</p>
+
+<p>con <code>Changes not staged for commit:</code> nos dice: &ldquo;aquí hay unos archivos que vos has querido que yo recuerde antes, los acabás de cambiar, si querés que me acuerde otra vez de ellos, dale <code>git add</code>&rdquo; y luego procede a listar los archivos que ya conoce y cómo los hemos cambiado. En este caso, nos dice que hemos modificado (<code>modified</code>) el archivo <code>app.rb</code>.</p>
+
+<p>Pero luego nos dice, con <code>Untracked files:</code>, que, además de los cambios en archivos que ya conoce, hay ahora otros archivos que <strong>aún no conoce</strong>. Para &ldquo;presentarle&rdquo; estos archivos a git, también podemos usar <code>git add</code>.</p>
+
+<p>De modo que, con <code>git add</code>, podemos hacer dos cosas:</p>
+
+<ul>
+<li><strong>Presentarle</strong> archivos a git, archivos que aún no conocía</li>
+<li>O <strong>recordarle</strong> archivos que ya conocía</li>
+</ul>
+
+
+<p>Hagamos ambas cosas, porque queremos que en este momento de la historia se acuerde de lo que hicimos con <strong>ambos</strong> archivos:</p>
+
+<pre><code>git add app.rb
+git add start.ru
+</code></pre>
+
+<p>Pudimos haber hecho esto también:</p>
+
+<pre><code>git add .
+</code></pre>
+
+<p>Que simplemente agrega todos los archivos en el directorio actual, pero esa es una costumbre peligrosa, ya que podríamos a veces agregar archivos que no queremos recordar en este momento.</p>
+
+<p>Una vez agregados los archivos a este nuevo recuerdo (en idioma git, acabamos de mover archivos al <code>stage</code> antes de hacer commit, que los mueve al <code>index</code>) podemos ver cuál es el status ahora:</p>
+
+<pre><code>git status
+# On branch master
+# Changes to be committed:
+#   (use "git reset HEAD &lt;file&gt;..." to unstage)
+#
+#   modified:   app.rb
+#   new file:   start.ru
+</code></pre>
+
+<p>esta vez nos dice, con <code>changes to be committed</code>, que ya está al tanto de los archivos que queremos recordar en este nuevo cambio, y está listo para que lo guardemos. Para guardar el cambio, para hacer efectivo el recuerdo, haremos nuestro segundo commit:</p>
+
+<pre><code>git commit -m 'usando rackup'
+</code></pre>
+
+<p>Y, ahora que ya hicimos el commit, veamos el status del proyecto</p>
+
+<pre><code>git status
+# On branch master
+nothing to commit (working directory clean)
+</code></pre>
+
+<p>con <code>nothing to commit</code>, git nos está diciendo que no hemos hecho ningún cambio desde el último commit, así que no hay nada nuevo que podríamos recordar.</p>
+
+<p>Podemos, también, ver la historia hasta ahora, con <code>git log</code>, y esta vez veremos dos commits.</p>
+
+<h2>3. Respondiendo a nuestro entorno</h2>
+
+<p>Nuestra aplicación hasta el momento no hace nada útil, de hecho, ¡ni siquiera toca el parámetro <code>env</code>!</p>
+
+<p>Repasemos cómo funciona una aplicación web en el lado del servidor:</p>
+
+<ul>
+<li>Recibe la solicitud</li>
+<li>Usa la información que está representada en la solicitud para construir una respuesta</li>
+<li>Devuelve la respuesta</li>
+</ul>
+
+
+<p>Hasta ahora, vimos que <code>rack</code> representa el último paso en un arreglo con la forma <code>[estado, encabezados, cuerpo]</code>. Pero, ¿cómo representa los primeros dos pasos?. Bueno, la solicitud está representada en el parámetro <code>env</code>: contiene un <code>Hash</code> con toda la información que se pueda sacar de la línea de solicitud, los encabezados y el cuerpo de las solicitudes, <strong>además</strong> de otras <code>variables de entorno</code> del servidor en el que estamos, que nos pueden ayudar. y ¿cómo <em>recibe</em> las solicitudes? De eso se encarga <code>rackup</code>: cuando una solicitud entra al puerto <code>3000</code> (en este caso), agarra <strong>la representación en texto de la solicitud</strong> y la interpreta como un <code>Hash</code>. Luego toma nuestra aplicación e invoca al método <code>call</code> con este <code>Hash</code> como parámetro y espera que le retornemos un arreglo que a su vez usará para construir <strong>la representación en texto de la respuesta</strong>.</p>
+
+<p>Exploremos un poco nuestro entorno, editemos <code>app.rb</code>:</p>
+
+<pre><code>#app.rb
+class WebApp
+  def call(env)
+    lang = env['HTTP_ACCEPT_LANGUAGE'] || 'en'
+    path = env['PATH_INFO']
+
+    body = if lang == 'en'
+        "you just asked for #{path}, \n with the env #{env.to_s}"
+    else
+        "acabas de pedir #{path}, \n con el entorno #{env.to_s}"
+    end 
+
+    [200, {'Content-Type' =&gt; "text/plain"}, [body]]
+  end
+end
+</code></pre>
+
+<p>Ejecutémoslo</p>
+
+<pre><code>rackup start.ru -p 3000
+</code></pre>
+
+<p>Y veámoslo en un browser o via curl con</p>
+
+<pre><code>curl -H "Accept-Language: es" localhost:3000
+</code></pre>
+
+<p>Si te fijás, esta vez saldrá un <code>Hash</code> gigante con varias llaves en mayúsculas. Dedicale un tiempo a leerlo todo, a ver qué cosas interesantes encontrás.</p>
+
+<p>Algunas cosas de interés que podrías ver:</p>
+
+<ul>
+<li>Hay algunas llaves que empiezan con <code>HTTP_</code>, esas suelen corresponder a información que va en los encabezados (por eso ves, por ejemplo, la llave <code>HTTP_ACCEPT_LANGUAGE</code> o la llave <code>HTTP_HOST</code>)</li>
+<li>Hay otras que empiezan con <code>REQUEST_</code>, que corresponden a la línea de solicitud, como <code>REQUEST_METHOD</code> o <code>REQUEST_PATH</code></li>
+<li>Otras varias que corresponden a información útil de la solicitud, como <code>QUERY_STRING</code></li>
+<li>Información específica del servidor mismo, como <code>SERVER_SOFTWARE</code></li>
+<li>Información específica introducida por <code>rack</code>, como <code>rack.errors</code>, que suelen ser objetos de ruby que abstraen información &ldquo;cruda&rdquo; de la solicitud.</li>
+</ul>
+
+
+<p>Como vemos, <code>env</code> contiene toda la información útil para construir respuestas, aunque esta está presentada de forma burda.</p>
+
+<h3>guardando nuestro progreso</h3>
+
+<p>Ok, llegamos otra vez al punto en que tenemos algo funcionando. Hora de guardar nuestro progreso.</p>
+
+<p>Ahora, la última vez aprendimos que le podemos preguntar a git qué cosas han cambiado desde la última vez que hicimos commit con <code>git status</code> (hacelo ahorita a ver qué cambió, quizá te diga que esta vez sólo modificaste <code>app.rb</code>).</p>
+
+<p>Ahora bien, ¿qué pasa si el <code>git status</code> no es suficiente, si no sólo queremos saber <em>qué</em> cambió sino <em>cómo</em> cambió?. En otras palabras, ¿qué pasa si queremos ver la <strong>diferencia</strong> entre este momento y la última vez que hicimos un commit? La respuesta: <code>git diff</code>:</p>
+
+<pre><code>git diff
+diff --git a/app.rb b/app.rb
+index b0b3226..c71f80d 100644
+--- a/app.rb
++++ b/app.rb
+@@ -1,5 +1,14 @@
+ class WebApp
+   def call(env)
+-    [201, {'Content-Type' =&gt; "text/plain"}, ['Hola Rackup']]
++    lang = env['HTTP_ACCEPT_LANGUAGE'] || 'en'
++    path = env['PATH_INFO']
++
++    body = if lang == 'en'
++             "you just asked for #{path}, \n with the env #{env.to_s}"
++           else
++             "acabas de pedir #{path}, \n con el entorno #{env.to_s}"
++           end
++
++    [201, {'Content-Type' =&gt; "text/plain"}, [body]]
+   end
+ end    
+</code></pre>
+
+<p>Como podés ver, nos da la siguiente información:</p>
+
+<ul>
+<li>Las líneas precedidas por un signo menos (<code>-</code>) son <strong>líneas que estaban allí en el último commit, pero que fueron borradas (o <em>sustitudas</em>)</strong></li>
+<li>Las precedidas por un signo <code>+</code> son las nuevas líneas que este cambio introducirá.</li>
+</ul>
+
+
+<p>(si configuraste bien git y los colores de tu terminal funcionan, las líneas borradas te saldrán en rojo y las agregadas, en verde).</p>
+
+<p>Ahora que ya sabés <em>qué</em> cambiaste, podés hacer un nuevo commit:</p>
+
+<pre><code>git add app.rb
+git commit -m 'explorando el entorno'
+</code></pre>
+
+<p>Una ayuda: esta rutina de agregar archivos que <strong>ya conocía git</strong> y luego hacer commit es tan común que el comando git commit tiene la opción <code>-a</code>, que hace automáticamente el <code>git add</code> de archivos que ya conoce git (ojo: <strong>no hace <code>git add</code> de archivos que estén <code>untracked</code>, es decir, que nunca le hayás presentado a git</strong>), así que los últimos comandos podrían haber sido:</p>
+
+<pre><code>git commit -am 'explorando el entorno'
+</code></pre>
+
+<h2>4. Empezando a funcionar: el asunto de los <em>modelos</em></h2>
+
+<p>Hemos llegado hasta este punto y ya tenemos una idea de cómo funcionaría una aplicación web: en cada solicitud que recibe, reacciona de alguna forma al entorno y devuelve los elementos de una respuesta. Empecemos, entonces, a replicar la aplicación que queríamos reproducir.</p>
+
+<p>Al diseñar una aplicación web, nos tenemos que hacer una simple pregunta:</p>
+
+<p><strong>¿Cuáles son los recursos, cómo puedo ver esto en términos de recursos y su manipulación?</strong></p>
+
+<p>Esa pregunta nos lleva a pensar en algunas otras, por ejemplo:</p>
+
+<ul>
+<li>¿Qué URLs estarán involucradas en nuestro proyecto?</li>
+<li>¿Cómo mostrar los recursos?</li>
+<li>¿Cómo se podrán crear/modificar/destruir los recursos?</li>
+<li>¿Cómo interactúan entre sí?</li>
+</ul>
+
+
+<p>En este caso, la respuesta es fácil: <strong>los recursos son las citas, se pueden mostrar en una lista o individualmente y cada cita se puede crear, actualizar o destruir</strong>. Es la aplicación más sencilla posible, pero cualquier otra aplicación web sólo es una elaboración de este mismo concepto.</p>
+
+<p>Empecemos con lo más fácil: asumiendo que ya existen las citas, ¿cómo mostraríamos una lista de éstas?</p>
+
+<p>Primero, ¿cómo representamos las citas? Podríamos verlas como instancias de una clase <code>Quote</code></p>
+
+<p>Algo así:</p>
+
+<pre><code>class Quote
+    attr_accessor :author, :content, :language
+    def initialize(author, content, language = 'en')
+        @author = author
+        @content = content
+        @language = language
+    end
+end
+</code></pre>
+
+<p>Nos queda el problema de cómo identificar <strong>únicamente</strong> cada cita, podríamos identificarlas por su lugar en la lista, así serían la cita <code>1</code>, la <code>2</code>, etc. Pero ¿qué va a pasar cuando empecemos a borrar citas? Si borramos la cita <code>2</code>, la que estaba en el lugar <code>3</code> va a tomar su lugar y ¡ninguna va a tener el identificador que tenía antes! Podríamos complicarnos y hacer esto funcionar, pero, afortunadamente, hay otra salida fácil: números aleatorios únicos.</p>
+
+<p>El concepto de un <code>uuid</code> (universally unique identifier) es el de asignar un identificador tal que nunca se vuelva a repetir (¡hablando de único!) y ruby 1.9.3 incluye el módulo <code>SecureRandom</code> que hace precisamente esto, probémoslo en irb:</p>
+
+<pre><code>1.9.3p125 :001 &gt; require 'securerandom'
+ =&gt; true 
+1.9.3p125 :002 &gt; SecureRandom.uuid
+ =&gt; "75ba2061-1156-405d-a09a-f795ca32e110"
+</code></pre>
+
+<p>(obviamente a vos te va a salir algo diferente)</p>
+
+<p>No es tan conveniente como tener un solo entero, pero es suficiente.</p>
+
+<p>Agregemos este conocimiento a la clase <code>Quote</code></p>
+
+<pre><code>require 'securerandom'
+class Quote
+    attr_accessor :author, :content, :language
+    def initialize(author, content, language = 'en')
+        @id = SecureRandom.uuid
+        @author = author
+        @content = content
+        @language = language
+    end
+end
+</code></pre>
+
+<p>Por último, necesitaríamos una forma de <strong>representar</strong> una instancia de <code>Quote</code>, así que agreguemos un método <code>as_text</code>:</p>
+
+<pre><code>class Quote
+    def as_text
+          "
+           #{id}.
+          #{content}
+          --#{author}
+          "
+    end
+end
+</code></pre>
+
+<p>Ahora bien, ya que vamos a estar creando citas, esta sintaxis es un poco tediosa:</p>
+
+<pre><code>cita_1 = Quote.new("el autor", "el contenido")
+cita_2 = Quote.new("otro autor", "otro contenido")
+…
+cita_n = Quote.new("miles de autores", "miles de contenidos")
+citas = [cita_1, cita_2, …, cita_n]
+</code></pre>
+
+<p>Primero que todo, tenemos que estarnos acordandos del orden de los parámetros, y, luego, nos estamos repitiendo un poco.</p>
+
+<p>Resolveríamos el primer problema si pudieramos hacer algo como</p>
+
+<pre><code>cita1 = Quote.create(content: "el contenido", author: "el autor")
+</code></pre>
+
+<p>Y el segundo, si pudieramos hacer algo como</p>
+
+<pre><code>citas = Quote.create([
+    {content: "primer contenido", author: "primer autor"},
+    {content: "segundo contenido", author: "segundo autor"}
+])
+</code></pre>
+
+<p>Para resolver dos problemas de un solo, agreguemos este <strong>método de clase</strong>:</p>
+
+<pre><code>class Quote
+  def self.create(hash_or_array)
+    if hash_or_array.is_a?(Hash)
+        Quote.new(hsh[:author], hsh[:content], hsh[:language])
+    elsif hash_or_array.is_a?(Array) &amp;&amp; hash_or_array.all?{|e| e.is_a?(Hash)}
+        hash_or_array.map{|h|  Quote.create(h)  }
+    end
+  end
+end
+</code></pre>
+
+<p>De modo que nuestra lista inicial de citas se podría ver así:</p>
+
+<pre><code> QUOTES = Quote.create([
+      {
+        author: "Ralph Waldo Emerson",
+        content: "Every sweet has its sour; every evil its good.",
+        language: "en"
+      },
+
+      {
+        author: "Siddhartha Gautama",
+        content: "El dolor es inevitable pero el sufrimiento es opcional.",
+        language: "es"
+      },
+      {
+        author: "Walt Whitman",
+        content: "Be curious, not judgmental",
+        language: "en"
+      }
+  ])
+</code></pre>
+
+<p>Lo que acabamos de hacer, decidir qué recursos habría y cómo los representaríamos como objetos que existen para el servidor, se conoce como la <em>capa de datos</em>, o, <strong>diseñar los modelos</strong>. Cada clase que represente un recurso, entonces, es un <em>modelo</em>.</p>
+
+<p>Por último, ya que estamos encapsulando el concepto de <em>modelo</em>, ¿dónde hemos de guardar los modelos que creemos? Podría ser un archivo o una base de datos, no importa; pero a nivel de ruby, es mejor verlos como guardados por la clase misma, así:</p>
+
+<pre><code>class Quote
+    @@instances = []
+end
+</code></pre>
+
+<p>La idea es que toda instancia que creemos quede &ldquo;guardada&rdquo; en un arreglo que será miembro de la clase.</p>
+
+<p>Así que modificamos el constructor:</p>
+
+<pre><code>class Quote
+    def initialize(a, c, l)
+     #lo que ya estaba…
+
+     @@instances &lt;&lt; self
+    end
+end
+</code></pre>
+
+<p>Y va a haber un par de operaciones que necesitaremos constantemente: obtener todas las citas y encontrar una cita específica (usando su identificador único). Así que agreguemos métodos de clase que usen ese arreglo:</p>
+
+<pre><code>class Quote
+    def self.all
+        @@instances
+    end
+
+    def self.find(id)
+        @@instances.find do |instance|
+            instance.id == id
+        end
+    end
+end
+</code></pre>
+
+<p>Todo esto que acabamos de hacer lo podemos poner en un archivo aparte, llamémoslo <code>models.rb</code>, y es una perfecta excusa para usar un <em>módulo</em> de ruby:</p>
+
+<pre><code>require 'securerandom'
+module Models
+  class Quote
+    attr_accessor :author, :content, :language
+    attr_reader :id
+
+    @@instances = []
+
+    def initialize(author, content, language = 'en')
+      @id = SecureRandom.uuid
+      @author = author
+      @content = content
+      @language = language
+
+      @@instances &lt;&lt; self
+    end
+
+    def as_text
+      "
+        #{id}.
+        #{content}
+        --#{author}
+      "
+    end
+
+    def self.create(hash_or_array)
+      if hash_or_array.is_a?(Hash)
+        hsh = hash_or_array
+        Quote.new(hsh[:author], hsh[:content], hsh[:language])
+      elsif hash_or_array.is_a?(Array) &amp;&amp; hash_or_array.all?{|e| e.is_a?(Hash)}
+        hash_or_array.map{|h|  Quote.create(h)  }
+      end
+    end
+
+    def self.all
+        @@instances
+    end
+
+    def self.find(id)
+        @@instances.find do |instance|
+            instance.id == id
+        end
+    end
+  end
+
+end
+
+#creemos unas cuantas por defecto
+ Models::Quote.create([
+      {
+        author: "Ralph Waldo Emerson",
+        content: "Every sweet has its sour; every evil its good.",
+        language: "en"
+      },
+      {
+        author: "Winston Churchill",
+        content: "We make a living by what we get, we make a life by what we give",
+        language: "en"
+      },
+      {
+        author: "Siddhartha Gautama",
+        content: "El dolor es inevitable pero el sufrimiento es opcional.",
+        language: "es"
+      },
+      {
+        author: "Walt Whitman",
+        content: "Be curious, not judgmental",
+        language: "en"
+      }
+  ])
+</code></pre>
+
+<p>Podemos probar todo en irb con:</p>
+
+<pre><code>1.9.3p125 :001 &gt; require './models'
+ =&gt; true 
+1.9.3p125 :002 &gt; Models::Quote.all
+ =&gt; [#&lt;Models::Quote:0x007fcd489cd930 @id="e0536489-04fd-4583-95b2-bd824acd7aee", @author="Ralph Waldo Emerson", @content="Every sweet has its sour; every evil its good.", @language="en"&gt;, #&lt;Models::Quote:0x007fcd489cd688 @id="367f10a6-d27e-49e5-999f-32d23118223c", @author="Winston Churchill", @content="We make a living by what we get, we make a life by what we give", @language="en"&gt;, #&lt;Models::Quote:0x007fcd489cd548 @id="e46cdc5b-004d-4956-8ab4-5d9785ec9653", @author="Siddhartha Gautama", @content="El dolor es inevitable pero el sufrimiento es opcional.", @language="es"&gt;, #&lt;Models::Quote:0x007fcd489cd408 @id="3c086c85-f865-4241-8a0f-81cabd0ef5f5", @author="Walt Whitman", @content="Be curious, not judgmental", @language="en"&gt;] 
+</code></pre>
+
+<h3>grabando nuestro progreso</h3>
+
+<p>Esta vez no tocamos los archivos de nuestro proyecto que git ya conoce (asegurate con <code>git status</code> y <code>git diff</code>), así que sólo haremos esto:</p>
+
+<pre><code>git add models.rb
+git commit -m 'creando los modelos'
+</code></pre>
+
+<p>Pero, en el siguiente cambio que hagamos, vamos a cambiar radicalmente el archivo <code>app.rb</code>. Si te da miedo lo que pueda pasar, git tiene una solución para eso: <a href="http://learn.github.com/p/branching.html">branches</a>: &ldquo;versiones alternativas&rdquo; de nuestro proyecto. La idea de un <em>branch</em> es partir desde un punto conocido, experimentar un rato y, si no funciona, volver al punto conocido (y, si funciona, implementar el experimento).</p>
+
+<p>En git uno siempre está trabajando sobre un branch, el nombre por defecto es <code>master</code>.  Los branches pueden tener nombres descriptivos, como <code>experimento</code>, que determinen de qué se trata toda la historia que representan.</p>
+
+<p>Creemos el branch <code>controladores</code> (de eso se trata lo que sigue):</p>
+
+<pre><code>git branch controladores
+git checkout controladores
+git branch
+    * controladores
+    master
+</code></pre>
+
+<p>Cuando enviamos un parámetro al comando <code>git branch</code>, él crea un <code>branch</code> que parte de  la rama actual. El comando <code>git checkout</code> nos permite cambiarnos de branch y el comando <code>git branch</code> sin parámetros, nos permite ver los branches que existen (marca el actual con un asterisco )</p>
+
+<p>Ahora, cualquier commit que hagamos, quedará en la historia del branch <code>controladores</code>, si nos arrepentimos de lo que hicimos allí, podríamos volver a <code>master</code> y todo estaría como lo dejamos antes de irnos a <code>controladores</code></p>
+
+<h2>5. Volviendo a la web: mostrando una colección de modelos o un modelo individual</h2>
+
+<p>Ahora que resolvimos el problema de representar los recursos (<em>modelos</em>) en esta aplicación, veamos cómo representarlos como parte de una respuesta HTTP.</p>
+
+<p>Ahora trataremos con el concepto de <strong>controlador</strong>: no es más que código que está al tanto de las <em>solicitudes</em> y los <em>recursos</em>, y que sabe cómo, en respuesta a las primeras, puede manipular los segundos.</p>
+
+<p>Lo que nosotros queremos, primero que todo, es código que tome la lista de modelos y la devuelva en una respuesta. Hagamos eso:</p>
+
+<pre><code>require './models'
+
+class WebApp
+  def call(env)
+    method = env["REQUEST_METHOD"]
+    status, body = case method
+      when "GET"
+        [200, Models::Quote.all.map(&amp;:as_text).join("\n")]
+      else
+        [405, ""]
+      end
+
+    [
+     status,
+     #los valores de los headers *deben* ser String
+     {'Content-Type' =&gt; 'text/plain', 'Content-Length' =&gt; body.size.to_s},
+     [body]
+    ]
+  end
+end
+</code></pre>
+
+<p>Como ves, estamos usando el entorno para saber qué método se ha usado y estamos respondiendo con encabezados útiles (agregamos <code>Content-Length</code> para que el cliente sepa cuántos bytes tiene el cuerpo de la respuesta)</p>
+
+<p>No esperemos más y <strong>guardemos nuestro progreso hasta ahora</strong>:</p>
+
+<pre><code>git commit -am 'mostrando toda la lista de modelos'
+</code></pre>
+
+<p>Lo siguiente que se debería poder hacer, es mostrar una sola cita, pero aquí tenemos dos problemas: ¿cómo sabemos qué cita se está pidiendo? y ¿cómo diferenciamos cuando se trate de <em>obtener</em> una cita de cuando se trate de <em>obtener</em> toda la lista?</p>
+
+<p>Usamos expresiones regulares:</p>
+
+<pre><code>require './models'
+class WebApp
+  def call(env)
+    method = env["REQUEST_METHOD"]
+    path   = env["REQUEST_PATH"]
+
+    collection_pattern = /\/quotes$/
+    member_pattern     = /\/quotes\/([a-z0-9\-]+)/
+
+    status, body = case method
+      when "GET"
+        if path =~ collection_pattern
+          [200, Models::Quote.all.map(&amp;:as_text).join("\n")]
+        elsif path =~ member_pattern
+          id = path.match(member_pattern)[1]
+          quote = Models::Quote.find(id)
+          if quote
+            [200, quote.as_text]
+          else
+            [404, ""]
+          end
+        else
+          [501, "Not Implemented"]
+        end
+      else
+        [405, ""]
+      end
+
+    [
+     status,
+     #los valores de los headers *deben* ser String
+     {'Content-Type' =&gt; 'text/plain', 'Content-Length' =&gt; body.size.to_s},
+     [body]
+    ]
+  end
+end
+</code></pre>
+
+<p>Guardemos nuestro progreso:</p>
+
+<pre><code>git commit -am 'obteniendo o la colección o un miembro'
+</code></pre>
+
+<h3>regresando a <code>master</code></h3>
+
+<p>Como nuestro progreso en la branch <code>controladores</code> se ve satisfactorio, estamos listos para regresar a <code>master</code>. Podemos, antes, ver en qué han cambiado con</p>
+
+<pre><code>git diff master controladores
+</code></pre>
+
+<p>Que mostrará como adiciones todo lo que se introduzca en la branch <code>controladores</code> respecto a <code>master</code></p>
+
+<p>Para unir los cambios que hicimos aquí, regresemos a master</p>
+
+<pre><code>git checkout master
+</code></pre>
+
+<p>Y unámoslos con el comando <code>git merge</code></p>
+
+<pre><code>git merge controladores
+</code></pre>
+
+<p>Y ahora, si vemos <code>git log</code>, veremos las dos historias unidas.</p>
+</body>
+</html>
