@@ -684,3 +684,218 @@ Y unámoslos con el comando `git merge`
 	git merge controladores
 	
 Y ahora, si vemos `git log`, veremos las dos historias unidas.
+
+##6. Abstrayendo los controladores
+
+En cuanto encontrés código donde hay demasiadas condiciones anidadas, hacé una pausa y ve cómo podés mejorar la situación. En este caso, vamos a crear algunos métodos que nos ayuden a separar las cosas.
+
+En primera, vamos a usar la clase [`Rack::Request`](http://rack.rubyforge.org/doc/Rack/Request.html) para abstraer el comportamiento de las solicitudes. 
+
+Luego, introduciremos el concepto de un método "enrutador" (_router_) para tratar con las distintas rutas posibles.
+
+Como recordarás de la clase, en la representación con URL de los recursos, usualmente encontramos estas dos formas de URL:
+
+* __colección__: representa a una _lista_ de recursos, el contendedor. En este caso, la url de colección será `/quotes`
+* __miembro__: representa a un miembro de una colección de recursos, usualmente, incluye algo que lo identifique únicamente, en este caso, las URL de miembros se verán algo así: `/quotes/7cbcdff2-8175-4ce9-87fe-428ddb0cf731`
+
+Por eso es que arriba usamos expresiones regulares:
+
+La expresión `/\/quotes$/` corresponde a la URL de colección, y se puede interpretar así: "cualquier string que empiece con una pleca (en la expresión regular hubo que escapar la pleca), seguida de la palabra quotes y _allí termine_ (por eso usamos el signo de dólar, éste indica que allí debería estar el final de la cadena)"
+
+Asimismo, la expresión `/\/quotes\/([a-z0-9\-]+)/` corresponde a la URL de miembro: "cualquier string que empiece con pleca, seguida de la palabra quotes, seguida de otra pleca y luego -considerando esto como un grupo, por eso los paréntesis- cualquier letra entre la a y la z, cualquier número entre 0 y 9 y el caracter guión, todo esto repetido una o más veces (las opciones las indicamos encerrándolas entre corchetes, y esa repetición la indicamos con el signo `+`)"
+
+Ahora que ya sabemos qué _rutas_ posibles hay, veamos cómo se combinan con los verbos de HTTP:
+
+* `GET /quotes` equivale a obtener toda la colección, llamaremos a esta acción `index`
+* `POST /quotes` equivale a crear un recurso dentro de la colección, llamaremos a esta acción `create`
+* `GET /quotes/1` equivale a mostrar un recurso miembro particular, llamaremos a esta acción `show`
+* `PUT /quotes/1` equivale a actualizar un recurso: `update`
+* `DELETE /quotes/1` equivale a destruir un recurso: `destroy`
+
+Cualquier otra combinación verbo + ruta no tiene semántica en este caso (por ejemplo, no se suele destruir toda la colección, así que `DELETE /quotes` no ha de ocurrir). En estos casos, deberíamos devolver una respuesta con código de estado `405 Method Not Allowed`.
+
+Con este conocimiento, este método podría verse así:
+
+	  def route(request)
+	    collection_pattern = /\/quotes$/
+	    member_pattern     = /\/quotes\/([a-z0-9\-]+)/
+	
+	
+	    #collection actions
+	    if request.path =~ collection_pattern
+	      if request.get?
+	        return index(request)
+	      elsif request.post?
+	        return create(request)
+	      else
+	        return [405, ""]
+	      end
+	    end
+	    
+	    #member actions
+	    if request.path =~ member_pattern
+	      if request.get?
+	        # show <=> read
+	        return show(request)
+	      elsif request.put?
+	        return update(request)
+	      elsif request.delete?
+	        return destroy(request)
+	      else
+	        return [405, ""]
+	      end
+	    end
+	
+	    #a not implemented path was requested
+	    return [501, ""]
+	  end
+
+Si te fijás, usamos `return` para salir en cuanto encontremos la ruta correcta. Aquí se asume que el parámetro `request` es una instancia de `Rack::Request`
+
+Agregaremos otro método llamado `dispatch` que se encargue de tomar una solicitud y mandarla al router, pero que, además, se encargue de dos casos comunes: cuando un recurso no es encontrado y cuando hay un error:
+
+	  def dispatch(request)
+	    begin
+	      route request
+	    rescue NotFoundException
+	      [404, ""]
+	    rescue
+	      [500, ""]
+	    end
+	  end
+Este método asume la existencia de una clase de excepción llamada `NotFoundException`, que se puede definir así:
+
+	class NotFoundException < Exception; end
+	
+Lo último que nos queda es definir los métodos que el método `route` asume que existen. En el último ejemplo, teníamos algo equivalente a los métodos `index` y `show`, así que implementemos esos
+
+	def index(request)
+      [200, Models::Quote.all.map(&:as_text).join("\n")]
+    end
+
+    def show(request)
+      quote = Models::Quote.find(request.params["id"])
+      if quote
+        [200, quote.as_text]
+      else
+        raise NotFoundException
+      end
+    end
+
+La gran pregunta es, ¿dónde ponemos estos métodos? Podríamos poner todo dentro de la clase `WebApp`, pero, así abstractos, ¿no sería mejor ponerlos en su propia clase?
+
+Esta clase podría verse así:
+
+	class QuotesController
+		def dispatch(request)
+			#…
+		end
+		
+		def route(request)
+			#…
+		end
+		
+		def get(request)
+			#...
+		end
+		
+		def index(request)
+			#…
+		end
+	end
+	
+Pero, si te fijás, los métodos `dispatch` y `route` son bastante genéricos y no podrían usarse sólo para este caso, así que podríamos ponerlos (generalizarlos) en una super-clase:
+	
+	class Controller
+	    def route(request)
+	      collection_pattern = /\/#{resource_name}$/
+	      member_pattern     = /\/#{resource_name}\/([a-z0-9\-]+)/
+	
+	
+	      puts request.path
+	      puts collection_pattern, member_pattern
+	      #collection actions
+	      if request.path =~ collection_pattern
+	        if request.get?
+	          return index(request)
+	        elsif request.post?
+	          return create(request)
+	        else
+	          return [405, ""]
+	        end
+	      end
+	      
+	      #member actions
+	      if request.path =~ member_pattern
+	        request.params["id"] = request.path.match(member_pattern)[1]
+	        if request.get?
+	          # show <=> read
+	          return show(request)
+	        elsif request.put?
+	          return update(request)
+	        elsif request.delete?
+	          return destroy(request)
+	        else
+	          return [405, ""]
+	        end
+	      end
+	
+	      #a not implemented path was requested
+	      return [501, ""]
+	    end
+	
+	
+	    def dispatch(request)
+	      begin
+	        route request
+	      rescue NotFoundException
+	        [404, ""]
+	      rescue
+	        [500, ""]
+	      end
+	    end
+	  end
+
+Y así, la clase `QuotesController` se reduciría a esto:
+
+	class QuotesController < Controller
+	    include Models
+	
+	    def resource_name
+	      "quotes"
+	    end
+	
+	    def index(request)
+	      [200, Quote.all.map(&:as_text).join("\n")]
+	    end
+	
+	    def show(request)
+	      quote = Quote.find(request.params["id"])
+	      if quote
+	        [200, quote.as_text]
+	      else
+	        raise NotFoundException
+	      end
+	    end
+	  end
+Y todo esto podríamos agruparlo dentro de un solo módulo:
+	
+	require './models'
+	module Controllers
+		include Models
+		class NotFoundException < Exception; end
+		
+		class Controller
+			#…
+		end
+		
+		class QuotesController
+			#...
+		end
+	end
+
+Fijate en la línea `include Models`: la instrucción `include` toma todas las constantes de un módulo y las incluye en el contexto actual. Por eso, en la versión final de esta etapa (que podés ver aquí <https://github.com/progra4/quotes/tree/a32334522aaf981222ab03f5f87ce5c88ae3ba74>), usamos la clase `Quote` en vez de decir `Models::Quote` y por eso, en la clase `WebApp`, al incluir el módulo `Controllers` se puede uno referir a `QuotesController` en lugar de `Controllers::QuotesController`
+
+Por último, si te fijás el parámetro `request` está en casi todas esas funciones, sería más conveniente que lo incluyéramos en el constructor de `Controller` para que fuera una propiedad que estuviera disponible a todos los métodos, ese cambio lo podés ver aquí: <https://github.com/progra4/quotes/tree/4838f7fddb157304aba4b9ed0057fce4e40838e8>
+
+En última instancia, haremos el método `create` que cree una nueva cita, para ver cómo usar el cuerpo de la solicitud. Te queda de ejercicio hacer los métodos `update` y `destroy`.

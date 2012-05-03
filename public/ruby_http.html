@@ -2,9 +2,6 @@
 <html>
 <head>
 <meta charset="utf-8">
-<script src="http://yandex.st/highlightjs/6.2/highlight.min.js"></script>
-<link rel="stylesheet" href="http://yandex.st/highlightjs/6.2/styles/default.min.css">
-<script>hljs.initHighlightingOnLoad();</script>
 <style>
 h1,
 h2,
@@ -868,5 +865,236 @@ end
 </code></pre>
 
 <p>Y ahora, si vemos <code>git log</code>, veremos las dos historias unidas.</p>
+
+<h2>6. Abstrayendo los controladores</h2>
+
+<p>En cuanto encontrés código donde hay demasiadas condiciones anidadas, hacé una pausa y ve cómo podés mejorar la situación. En este caso, vamos a crear algunos métodos que nos ayuden a separar las cosas.</p>
+
+<p>En primera, vamos a usar la clase <a href="http://rack.rubyforge.org/doc/Rack/Request.html"><code>Rack::Request</code></a> para abstraer el comportamiento de las solicitudes.</p>
+
+<p>Luego, introduciremos el concepto de un método &ldquo;enrutador&rdquo; (<em>router</em>) para tratar con las distintas rutas posibles.</p>
+
+<p>Como recordarás de la clase, en la representación con URL de los recursos, usualmente encontramos estas dos formas de URL:</p>
+
+<ul>
+<li><strong>colección</strong>: representa a una <em>lista</em> de recursos, el contendedor. En este caso, la url de colección será <code>/quotes</code></li>
+<li><strong>miembro</strong>: representa a un miembro de una colección de recursos, usualmente, incluye algo que lo identifique únicamente, en este caso, las URL de miembros se verán algo así: <code>/quotes/7cbcdff2-8175-4ce9-87fe-428ddb0cf731</code></li>
+</ul>
+
+
+<p>Por eso es que arriba usamos expresiones regulares:</p>
+
+<p>La expresión <code>/\/quotes$/</code> corresponde a la URL de colección, y se puede interpretar así: &ldquo;cualquier string que empiece con una pleca (en la expresión regular hubo que escapar la pleca), seguida de la palabra quotes y <em>allí termine</em> (por eso usamos el signo de dólar, éste indica que allí debería estar el final de la cadena)&rdquo;</p>
+
+<p>Asimismo, la expresión <code>/\/quotes\/([a-z0-9\-]+)/</code> corresponde a la URL de miembro: &ldquo;cualquier string que empiece con pleca, seguida de la palabra quotes, seguida de otra pleca y luego -considerando esto como un grupo, por eso los paréntesis- cualquier letra entre la a y la z, cualquier número entre 0 y 9 y el caracter guión, todo esto repetido una o más veces (las opciones las indicamos encerrándolas entre corchetes, y esa repetición la indicamos con el signo <code>+</code>)&rdquo;</p>
+
+<p>Ahora que ya sabemos qué <em>rutas</em> posibles hay, veamos cómo se combinan con los verbos de HTTP:</p>
+
+<ul>
+<li><code>GET /quotes</code> equivale a obtener toda la colección, llamaremos a esta acción <code>index</code></li>
+<li><code>POST /quotes</code> equivale a crear un recurso dentro de la colección, llamaremos a esta acción <code>create</code></li>
+<li><code>GET /quotes/1</code> equivale a mostrar un recurso miembro particular, llamaremos a esta acción <code>show</code></li>
+<li><code>PUT /quotes/1</code> equivale a actualizar un recurso: <code>update</code></li>
+<li><code>DELETE /quotes/1</code> equivale a destruir un recurso: <code>destroy</code></li>
+</ul>
+
+
+<p>Cualquier otra combinación verbo + ruta no tiene semántica en este caso (por ejemplo, no se suele destruir toda la colección, así que <code>DELETE /quotes</code> no ha de ocurrir). En estos casos, deberíamos devolver una respuesta con código de estado <code>405 Method Not Allowed</code>.</p>
+
+<p>Con este conocimiento, este método podría verse así:</p>
+
+<pre><code>  def route(request)
+    collection_pattern = /\/quotes$/
+    member_pattern     = /\/quotes\/([a-z0-9\-]+)/
+
+
+    #collection actions
+    if request.path =~ collection_pattern
+      if request.get?
+        return index(request)
+      elsif request.post?
+        return create(request)
+      else
+        return [405, ""]
+      end
+    end
+
+    #member actions
+    if request.path =~ member_pattern
+      if request.get?
+        # show &lt;=&gt; read
+        return show(request)
+      elsif request.put?
+        return update(request)
+      elsif request.delete?
+        return destroy(request)
+      else
+        return [405, ""]
+      end
+    end
+
+    #a not implemented path was requested
+    return [501, ""]
+  end
+</code></pre>
+
+<p>Si te fijás, usamos <code>return</code> para salir en cuanto encontremos la ruta correcta. Aquí se asume que el parámetro <code>request</code> es una instancia de <code>Rack::Request</code></p>
+
+<p>Agregaremos otro método llamado <code>dispatch</code> que se encargue de tomar una solicitud y mandarla al router, pero que, además, se encargue de dos casos comunes: cuando un recurso no es encontrado y cuando hay un error:</p>
+
+<pre><code>  def dispatch(request)
+    begin
+      route request
+    rescue NotFoundException
+      [404, ""]
+    rescue
+      [500, ""]
+    end
+  end
+</code></pre>
+
+<p>Este método asume la existencia de una clase de excepción llamada <code>NotFoundException</code>, que se puede definir así:</p>
+
+<pre><code>class NotFoundException &lt; Exception; end
+</code></pre>
+
+<p>Lo último que nos queda es definir los métodos que el método <code>route</code> asume que existen. En el último ejemplo, teníamos algo equivalente a los métodos <code>index</code> y <code>show</code>, así que implementemos esos</p>
+
+<pre><code>def index(request)
+  [200, Models::Quote.all.map(&amp;:as_text).join("\n")]
+end
+
+def show(request)
+  quote = Models::Quote.find(request.params["id"])
+  if quote
+    [200, quote.as_text]
+  else
+    raise NotFoundException
+  end
+end
+</code></pre>
+
+<p>La gran pregunta es, ¿dónde ponemos estos métodos? Podríamos poner todo dentro de la clase <code>WebApp</code>, pero, así abstractos, ¿no sería mejor ponerlos en su propia clase?</p>
+
+<p>Esta clase podría verse así:</p>
+
+<pre><code>class QuotesController
+    def dispatch(request)
+        #…
+    end
+
+    def route(request)
+        #…
+    end
+
+    def get(request)
+        #...
+    end
+
+    def index(request)
+        #…
+    end
+end
+</code></pre>
+
+<p>Pero, si te fijás, los métodos <code>dispatch</code> y <code>route</code> son bastante genéricos y no podrían usarse sólo para este caso, así que podríamos ponerlos (generalizarlos) en una super-clase:</p>
+
+<pre><code>class Controller
+    def route(request)
+      collection_pattern = /\/#{resource_name}$/
+      member_pattern     = /\/#{resource_name}\/([a-z0-9\-]+)/
+
+
+      puts request.path
+      puts collection_pattern, member_pattern
+      #collection actions
+      if request.path =~ collection_pattern
+        if request.get?
+          return index(request)
+        elsif request.post?
+          return create(request)
+        else
+          return [405, ""]
+        end
+      end
+
+      #member actions
+      if request.path =~ member_pattern
+        request.params["id"] = request.path.match(member_pattern)[1]
+        if request.get?
+          # show &lt;=&gt; read
+          return show(request)
+        elsif request.put?
+          return update(request)
+        elsif request.delete?
+          return destroy(request)
+        else
+          return [405, ""]
+        end
+      end
+
+      #a not implemented path was requested
+      return [501, ""]
+    end
+
+
+    def dispatch(request)
+      begin
+        route request
+      rescue NotFoundException
+        [404, ""]
+      rescue
+        [500, ""]
+      end
+    end
+  end
+</code></pre>
+
+<p>Y así, la clase <code>QuotesController</code> se reduciría a esto:</p>
+
+<pre><code>class QuotesController &lt; Controller
+    include Models
+
+    def resource_name
+      "quotes"
+    end
+
+    def index(request)
+      [200, Quote.all.map(&amp;:as_text).join("\n")]
+    end
+
+    def show(request)
+      quote = Quote.find(request.params["id"])
+      if quote
+        [200, quote.as_text]
+      else
+        raise NotFoundException
+      end
+    end
+  end
+</code></pre>
+
+<p>Y todo esto podríamos agruparlo dentro de un solo módulo:</p>
+
+<pre><code>require './models'
+module Controllers
+    include Models
+    class NotFoundException &lt; Exception; end
+
+    class Controller
+        #…
+    end
+
+    class QuotesController
+        #...
+    end
+end
+</code></pre>
+
+<p>Fijate en la línea <code>include Models</code>: la instrucción <code>include</code> toma todas las constantes de un módulo y las incluye en el contexto actual. Por eso, en la versión final de esta etapa (que podés ver aquí <a href="https://github.com/progra4/quotes/tree/a32334522aaf981222ab03f5f87ce5c88ae3ba74">https://github.com/progra4/quotes/tree/a32334522aaf981222ab03f5f87ce5c88ae3ba74</a>), usamos la clase <code>Quote</code> en vez de decir <code>Models::Quote</code> y por eso, en la clase <code>WebApp</code>, al incluir el módulo <code>Controllers</code> se puede uno referir a <code>QuotesController</code> en lugar de <code>Controllers::QuotesController</code></p>
+
+<p>Por último, si te fijás el parámetro <code>request</code> está en casi todas esas funciones, sería más conveniente que lo incluyéramos en el constructor de <code>Controller</code> para que fuera una propiedad que estuviera disponible a todos los métodos, ese cambio lo podés ver aquí: <a href="https://github.com/progra4/quotes/tree/4838f7fddb157304aba4b9ed0057fce4e40838e8">https://github.com/progra4/quotes/tree/4838f7fddb157304aba4b9ed0057fce4e40838e8</a></p>
+
+<p>En última instancia, haremos el método <code>create</code> que cree una nueva cita, para ver cómo usar el cuerpo de la solicitud. Te queda de ejercicio hacer los métodos <code>update</code> y <code>destroy</code>.</p>
 </body>
 </html>
