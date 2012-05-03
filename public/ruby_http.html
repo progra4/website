@@ -1096,5 +1096,58 @@ end
 <p>Por último, si te fijás el parámetro <code>request</code> está en casi todas esas funciones, sería más conveniente que lo incluyéramos en el constructor de <code>Controller</code> para que fuera una propiedad que estuviera disponible a todos los métodos, ese cambio lo podés ver aquí: <a href="https://github.com/progra4/quotes/tree/4838f7fddb157304aba4b9ed0057fce4e40838e8">https://github.com/progra4/quotes/tree/4838f7fddb157304aba4b9ed0057fce4e40838e8</a></p>
 
 <p>En última instancia, haremos el método <code>create</code> que cree una nueva cita, para ver cómo usar el cuerpo de la solicitud. Te queda de ejercicio hacer los métodos <code>update</code> y <code>destroy</code>.</p>
+
+<h2>Extra: sincronizando tu repositorio git con un remoto</h2>
+
+<p>Hasta ahora has guardado todo tu progreso en tu computadora local. ¿Qué pasaría si un día te despertás y tu computadora no encience, o si se te cae en lava ardiente en los volcanes siempre activos de hawaii? Puede pasar. Y, sin computadora, de nada sirve que tengás toda tu historia bien organizada con git.</p>
+
+<p>Lo mejor sería, entonces, que hubiera una copia de tu historia en ¡algún lugar mágico de <strong>internet</strong>!</p>
+
+<p>Y para eso está <a href="http://github.com">github.com</a>. Vos deberías haber creado una cuenta allí, podés crearla en este enlace: <a href="https://github.com/signup/free">https://github.com/signup/free</a> .</p>
+
+<p>Una vez que creés tu cuenta y estés autenticado en github.com, vas a poder crear tus propios <em>repositorios</em> allí, un repositorio es simplemente un proyecto.</p>
+
+<p>Para crear un repositorio, andá a esta URL: <a href="https://github.com/new">https://github.com/new</a> y vas a ver algo como esto.</p>
+
+<p><img src="https://img.skitch.com/20120503-2qnr5awrnqufwttc81w8jnxnb.jpg" alt="" /></p>
+
+<p>Una vez que des click en <code>Create Repository</code>, vas a ver algo como esto:</p>
+
+<p><img src="https://img.skitch.com/20120503-1w32gnqygqpd33qbf18y3bqtkc.jpg" alt="" /></p>
+
+<p>(en este ejemplo, mi usuario se llama <code>rest-apis</code> y el repositorio <code>ejemplo_git</code>)</p>
+
+<p><strong>Advertencia</strong>: todos los repositorios que creés son por defecto públicos, es decir, que cualquiera puede ver tu código. Github te permite crear repositorios privados (que sólo vos y la gente que elijás pueda ver) pero suele cobrar por ese servicio. Sin embargo, si te interesa tener repositorios privados en git y no querés pagar por ello, podés decirles que sos un estudiante (incluso podés decirles que sos de la clase que tiene repositorio en <a href="http://github.com/progra4">http://github.com/progra4</a>), para decirles que sos estudiante y ver si te permiten crear repositorios gratis, contactalos aquí: <a href="https://github.com/edu">https://github.com/edu</a> (da click en <code>I'm a student</code>)</p>
+
+<p>Si te fijás, ahí te da las instrucciones para un <code>Existing git repo</code>, que es nuestro caso, porque vos ya tenés creado tu repositorio. Lo que vamos a hacer ahora es hacerle saber a nuestro repositorio que puede ser sincronizado con una copia remota:</p>
+
+<pre><code>git remote add origin git@github.com:TU_USUARIO/TU_REPOSITORIO
+</code></pre>
+
+<p>(ojo que <code>TU_USUARIO</code> y <code>TU_REPOSITORIO</code> dependen de cuál es tu nombre de usuario y qué nombre le pusiste al repositorio.)</p>
+
+<p>Y lo que le estás diciendo a git es: &ldquo;te aviso que vas a tener una copia remota y le llamaré <code>origin</code>&rdquo;, <code>origin</code> es sólo un nombre convencional, puede ser cualquier otra cosa.</p>
+
+<p>De aquí en adelante, cada vez que querás que los commits que tenés localmente se guarden en tu copia remota, usá este comando:</p>
+
+<pre><code>git push origin master
+</code></pre>
+
+<p>Y aquí estás diciendo: &ldquo;quiero subir los cambios que tengo hasta ahorita en el branch <code>master</code> a mi copia remota que se llama <code>origin</code>&rdquo; (porque podés tener varios branches y varias copias remotas).</p>
+
+<p>Una vez que hagás el <code>git push</code>, vas a poder entrar a tu repositorio y ver los archivos y la lista de cambios (hay una pestaña que dice <code>commits</code>).</p>
+
+<h2>Más información sobre git</h2>
+
+<p>Algunos recursos sobre git que a los que podés acudir para profundizar en esto:</p>
+
+<ul>
+<li><a href="http://tom.preston-werner.com/2009/05/19/the-git-parable.html">The git parable</a></li>
+<li><a href="http://learn.github.com/p/intro.html">learn.github</a></li>
+<li><a href="http://gitref.org/">gitref</a></li>
+<li><a href="http://progit.org/book/">Pro Git</a></li>
+<li><a href="http://book.git-scm.com/">Git community book</a></li>
+</ul>
+
 </body>
 </html>

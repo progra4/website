@@ -899,3 +899,53 @@ Fijate en la línea `include Models`: la instrucción `include` toma todas las c
 Por último, si te fijás el parámetro `request` está en casi todas esas funciones, sería más conveniente que lo incluyéramos en el constructor de `Controller` para que fuera una propiedad que estuviera disponible a todos los métodos, ese cambio lo podés ver aquí: <https://github.com/progra4/quotes/tree/4838f7fddb157304aba4b9ed0057fce4e40838e8>
 
 En última instancia, haremos el método `create` que cree una nueva cita, para ver cómo usar el cuerpo de la solicitud. Te queda de ejercicio hacer los métodos `update` y `destroy`.
+
+##Extra: sincronizando tu repositorio git con un remoto
+
+Hasta ahora has guardado todo tu progreso en tu computadora local. ¿Qué pasaría si un día te despertás y tu computadora no encience, o si se te cae en lava ardiente en los volcanes siempre activos de hawaii? Puede pasar. Y, sin computadora, de nada sirve que tengás toda tu historia bien organizada con git.
+
+Lo mejor sería, entonces, que hubiera una copia de tu historia en ¡algún lugar mágico de __internet__!
+
+Y para eso está [github.com](http://github.com). Vos deberías haber creado una cuenta allí, podés crearla en este enlace: <https://github.com/signup/free> .
+
+Una vez que creés tu cuenta y estés autenticado en github.com, vas a poder crear tus propios _repositorios_ allí, un repositorio es simplemente un proyecto.
+
+Para crear un repositorio, andá a esta URL: <https://github.com/new> y vas a ver algo como esto.
+
+
+![](https://img.skitch.com/20120503-2qnr5awrnqufwttc81w8jnxnb.jpg)
+
+Una vez que des click en `Create Repository`, vas a ver algo como esto:
+
+![](https://img.skitch.com/20120503-1w32gnqygqpd33qbf18y3bqtkc.jpg)
+
+(en este ejemplo, mi usuario se llama `rest-apis` y el repositorio `ejemplo_git`)
+
+__Advertencia__: todos los repositorios que creés son por defecto públicos, es decir, que cualquiera puede ver tu código. Github te permite crear repositorios privados (que sólo vos y la gente que elijás pueda ver) pero suele cobrar por ese servicio. Sin embargo, si te interesa tener repositorios privados en git y no querés pagar por ello, podés decirles que sos un estudiante (incluso podés decirles que sos de la clase que tiene repositorio en <http://github.com/progra4>), para decirles que sos estudiante y ver si te permiten crear repositorios gratis, contactalos aquí: <https://github.com/edu> (da click en `I'm a student`)
+
+Si te fijás, ahí te da las instrucciones para un `Existing git repo`, que es nuestro caso, porque vos ya tenés creado tu repositorio. Lo que vamos a hacer ahora es hacerle saber a nuestro repositorio que puede ser sincronizado con una copia remota:
+
+	git remote add origin git@github.com:TU_USUARIO/TU_REPOSITORIO
+	
+(ojo que `TU_USUARIO` y `TU_REPOSITORIO` dependen de cuál es tu nombre de usuario y qué nombre le pusiste al repositorio.)
+
+Y lo que le estás diciendo a git es: "te aviso que vas a tener una copia remota y le llamaré `origin`", `origin` es sólo un nombre convencional, puede ser cualquier otra cosa.
+
+De aquí en adelante, cada vez que querás que los commits que tenés localmente se guarden en tu copia remota, usá este comando:
+
+	git push origin master
+	
+Y aquí estás diciendo: "quiero subir los cambios que tengo hasta ahorita en el branch `master` a mi copia remota que se llama `origin`" (porque podés tener varios branches y varias copias remotas).
+
+Una vez que hagás el `git push`, vas a poder entrar a tu repositorio y ver los archivos y la lista de cambios (hay una pestaña que dice `commits`).
+
+##Más información sobre git
+
+Algunos recursos sobre git que a los que podés acudir para profundizar en esto:
+
+* [The git parable](http://tom.preston-werner.com/2009/05/19/the-git-parable.html)
+* [learn.github](http://learn.github.com/p/intro.html)
+* [gitref](http://gitref.org/)
+* [Pro Git](http://progit.org/book/)
+* [Git community book](http://book.git-scm.com/)
+
