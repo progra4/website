@@ -1,0 +1,182 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+blockquote {
+    margin: 0;
+    padding: 0;
+}
+body {
+    font-family: "Helvetica Neue", Helvetica, "Hiragino Sans GB", Arial, sans-serif;
+    font-size: 13px;
+    line-height: 18px;
+    color: #737373;
+    margin: 10px 13px 10px 13px;
+}
+a {
+    color: #0069d6;
+}
+a:hover {
+    color: #0050a3;
+    text-decoration: none;
+}
+a img {
+    border: none;
+}
+p {
+    margin-bottom: 9px;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    color: #404040;
+    line-height: 36px;
+}
+h1 {
+    margin-bottom: 18px;
+    font-size: 30px;
+}
+h2 {
+    font-size: 24px;
+}
+h3 {
+    font-size: 18px;
+}
+h4 {
+    font-size: 16px;
+}
+h5 {
+    font-size: 14px;
+}
+h6 {
+    font-size: 13px;
+}
+hr {
+    margin: 0 0 19px;
+    border: 0;
+    border-bottom: 1px solid #ccc;
+}
+blockquote {
+    padding: 13px 13px 21px 15px;
+    margin-bottom: 18px;
+    font-family:georgia,serif;
+    font-style: italic;
+}
+blockquote:before {
+    content:"\201C";
+    font-size:40px;
+    margin-left:-10px;
+    font-family:georgia,serif;
+    color:#eee;
+}
+blockquote p {
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 18px;
+    margin-bottom: 0;
+    font-style: italic;
+}
+code, pre {
+    font-family: Monaco, Andale Mono, Courier New, monospace;
+}
+code {
+    background-color: #fee9cc;
+    color: rgba(0, 0, 0, 0.75);
+    padding: 1px 3px;
+    font-size: 12px;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+}
+pre {
+    display: block;
+    padding: 14px;
+    margin: 0 0 18px;
+    line-height: 16px;
+    font-size: 11px;
+    border: 1px solid #d9d9d9;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+pre code {
+    background-color: #fff;
+    color:#737373;
+    font-size: 11px;
+    padding: 0;
+}
+@media screen and (min-width: 768px) {
+    body {
+        width: 748px;
+        margin:10px auto;
+    }
+}
+</style>
+<title>Examen 1</title>
+</head>
+<body>
+<h1>Examen 1</h1>
+
+<h2>Preliminares: modo de entrega</h2>
+
+<p>Como dice al final de la <a href="http://progra4.heroku.com/ruby_http.html">guía de rack</a>, es posible que tengás una copia remota de tu repositorio guardada en github.com . Para este examen, yo creé un repositorio en github.com al que sólo vos y yo tendremos acceso. El repositorio estará en <a href="http://github.com/progra4/examen1_TU-NUMERO-DE-CUENTA">http://github.com/progra4/examen1_TU-NUMERO-DE-CUENTA</a></p>
+
+<p>En este momento quizá no tengás acceso porque yo te tengo que dar permiso. Para que te dé permiso, <strong>decime cuál es tu nombre de usuario en github</strong>. Este es el primer paso, no sigás hasta que me hayás logrado decir tu nombre de usuario.</p>
+
+<p>Una vez que me digás tu nombre de usuario y yo te agregue al repositorio, vas a poder hacer lo siguiente:</p>
+
+<pre><code>git clone git@github.com:progra4/examen1_TU-NUMERO-DE-CUENTA.git examen1
+</code></pre>
+
+<p>Eso creará una copia en tu computadora del repositorio del examen (en una carpeta llamada <code>examen1</code>). Una vez que tengás esta carpeta creada, <strong>podés empezar</strong>. En esa carpeta podés poner tu código y hacer los commits (<strong>no necesitarás hacer git init</strong>, cuando una carpeta se crea a partir de una copia remota via <code>git clone</code>, git ya está al tanto de ella). De ahí en adelante, recordá que podés hacer <code>git push origin master</code> para sincronizar la copia remota con tu copia local en cualquier momento (y se subirán los commits que tengás hasta entonces), te aconsejo que lo hagás frecuentemente porque <strong>lo que haya allí antes de las diez de la mañana del lunes</strong> se considerará tu entrega final.</p>
+
+<h2>Reglas</h2>
+
+<ul>
+<li>Como se menciona arriba, el examen se entregará <strong>via github</strong>.</li>
+<li>La versión final es la que esté <strong>subida en github antes de las diez de la mañana del lunes</strong>. La revisión se hará el <strong>lunes en la tarde</strong> de forma presencial (copiaré tu código desde github y lo ejecutaré en mi computadora).</li>
+<li>Como es el mismo examen para todos y es para trabajar en casa, cualquier intento de plagio se penalizará con una nota de <strong>cero</strong> para los implicados. Pero espero que esto, a estas alturas de la carrera, no tenga que pasar.</li>
+<li>El propósito de este examen no es que sigás instrucciones, sino que demostrés creatividad y capacidad de resolver problemas, los requisitos son cortos precisamente por eso, no es una excusa aceptable que en la revisión se te pregunte por qué no hiciste algo que era obvio que era necesario para el funcionamiento correcto del programa y digás &ldquo;es que no estaba en el enunciado&rdquo; o &ldquo;es que no le entendí&rdquo;. Estoy abierto todo el fin de semana a que me hagás preguntas a mi correo electrónico (luisfborjas@gmail.com).</li>
+</ul>
+
+
+<h2>Requisitos</h2>
+
+<p>Lo que se quiere hacer es una aplicación que permita manejar una lista de cosas por hacer (to-do list). El usuario final debería ser capaz de crear una tarea (que tiene una descripción -que debe ser única-, un responsable y un número de prioridad), ver las tareas que no ha completado ordenadas por prioridad o filtradas por responsable, y marcar las tareas como terminadas.</p>
+
+<p>Si un usuario opta por comunicarse directamente con el servidor, debería ser capaz de ver las listas de tareas y las tareas individuales como <strong>texto plano</strong>.</p>
+
+<p>Pero un usuario también debería poder comunicarse con el servidor a través de una aplicación <strong>cliente</strong> (que también tenés que programar, en ruby) que le permita llevar a cabo todos los casos descritos antes. Esta aplicación debería portarse de la forma más fácil de usar posible para el usuario final (pensá en los <code>main</code> que hacías en tus tiempos) y comunicarse con el servidor en algún formato <strong>legible para una máquina</strong>.</p>
+
+<p>Por <strong>puntos extra</strong>, un usuario debería ser capaz de ver la lista de tareas no terminadas ordenadas por prioridad en formato html en un browser.</p>
+
+<h3>Criterios de evaluación:</h3>
+
+<ul>
+<li>Diseño de la aplicación del lado del servidor, respetando los principios REST (usando bien HTTP). Permitir usar la aplicación directamente por un cliente http de consola (curl) representando los recursos en un formato humanamente legible y también proveer un formato que las máquinas puedan entender (para facilitar el desarrollo del cliente en ruby). Y por <strong>puntos extra</strong> también poder ver la lista de tareas en formato html.</li>
+<li>Facilidad de uso de la aplicación cliente: tiene que estar escrita en ruby y proveer una interfaz (en línea de comandos) que haga fácil entender qué se puede hacer y qué pasos se han de seguir.</li>
+<li>Que un usuario final, ya sea directamente o mediante la aplicación cliente, pueda:
+
+<ul>
+<li>Crear una tarea (no debe permitir crear tareas con descripciones repetidas, no importan las mayúsculas y minúsculas ni que la prioridad o el responsable sean diferentes. Tampoco se puede dejar la descripción en blanco. El responsable sí puede estar en blanco y la prioridad por defecto debería ser <code>1</code>)</li>
+<li>Actualizar una tarea (cambiar la descripción, el responsable o la prioridad; la descripción no puede quedar en blanco)</li>
+<li>Marcar una tarea como terminada</li>
+<li>Listar todas sus tareas no terminadas ordenadas por prioridad (entre mayor el número, mayor la prioridad, no importa que los números se repitan)</li>
+<li>Ver las tareas filtradas por persona responsable (se usará el nombre de la persona responsable, no debería ser sensible a mayúsculas o minúsculas, de modo que las tareas asignadas a Juan Perez y las de juan PEREZ deberían mostrarse cuando se filtren por el nombre &ldquo;juan perez&rdquo;)</li>
+</ul>
+</li>
+<li>Espíritu investigativo: mucho de lo que se necesita aquí probablemente no lo vimos explícitamente en clase, pero todos los recursos necesarios están en lo que ya aprendimos, sólo es de ver más allá de la superficie.</li>
+</ul>
+
+</body>
+</html>
