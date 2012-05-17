@@ -334,6 +334,41 @@ Para forzar a que estas reglas se cumplan, introduciremos el concepto de __valid
 
 Rails nos ofrece ciertos métodos que podemos agregar a nuestras clases para forzar estas reglas, editemos el modelo que vive en `app/models/task.rb`:
 
+
+     class Task < ActiveRecord::Base
+      attr_accessible :description, :priority
+    
+      validates_presence_of :description
+      validates_uniqueness_of :description
+      validates :priority, numericality: {:greater_than => 0}
+    
+      before_validation :clean_description, if: "description.present?"
+    
+      private
+      def clean_description
+        self.description = self.description.strip.capitalize
+      end
+     end
+     
+Hablemos de esto por partes:
+
+* `validates_presence_of` es un método que genera un validador para el atributo (o atributos) que se le provean. Valida que el atributo tenga un valor no-nulo
+* `validates_uniqueness_of`: valida que el atributo (columna) sea único entre todas las filas ya existentes de la tabla
+* `validates` es general, y sirve para construir validadores más complejos. En este caso validamos la ["numericality"](http://guides.rubyonrails.org/active_record_validations_callbacks.html#numericality) del atributo `priority` para asegurarnos que sea mayor que cero.
+
+Además de los métodos que generaron validadores, tenemos otro método, que genera un "callback". En RoR hay un concepto interesante con los modelos: __eventos__, cada vez que un modelo se crea, actualiza o destruye, ciertos eventos son reportados al sistema, y pueden ser usados por nosotros. En esta ocasión, estamos diciendo "antes de que ocurra el evento `validation` quiero que un método se ejecute". Y estamos usando un símbolo para referirnos a un método privado que definimos después. Y, además, usamos la opción `if` para decir que ese método sólo debería ejecutarse si hay una descripción presente. El método en sí simplemente elimina espacios en blanco y capitaliza las descripciones.
+
+Probemos las validaciones en una sesión de irb:
+
+
+Y, ahora, es buena idea hacer otro commit.
+
+
+
+
+Más información sobre validaciones y "callbacks" acá: <http://guides.rubyonrails.org/active_record_validations_callbacks.html>
+
+
 ###2. El router
 
 
