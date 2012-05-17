@@ -1,0 +1,570 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+blockquote {
+    margin: 0;
+    padding: 0;
+}
+body {
+    font-family: "Helvetica Neue", Helvetica, "Hiragino Sans GB", Arial, sans-serif;
+    font-size: 13px;
+    line-height: 18px;
+    color: #737373;
+    margin: 10px 13px 10px 13px;
+}
+a {
+    color: #0069d6;
+}
+a:hover {
+    color: #0050a3;
+    text-decoration: none;
+}
+a img {
+    border: none;
+}
+p {
+    margin-bottom: 9px;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    color: #404040;
+    line-height: 36px;
+}
+h1 {
+    margin-bottom: 18px;
+    font-size: 30px;
+}
+h2 {
+    font-size: 24px;
+}
+h3 {
+    font-size: 18px;
+}
+h4 {
+    font-size: 16px;
+}
+h5 {
+    font-size: 14px;
+}
+h6 {
+    font-size: 13px;
+}
+hr {
+    margin: 0 0 19px;
+    border: 0;
+    border-bottom: 1px solid #ccc;
+}
+blockquote {
+    padding: 13px 13px 21px 15px;
+    margin-bottom: 18px;
+    font-family:georgia,serif;
+    font-style: italic;
+}
+blockquote:before {
+    content:"\201C";
+    font-size:40px;
+    margin-left:-10px;
+    font-family:georgia,serif;
+    color:#eee;
+}
+blockquote p {
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 18px;
+    margin-bottom: 0;
+    font-style: italic;
+}
+code, pre {
+    font-family: Monaco, Andale Mono, Courier New, monospace;
+}
+code {
+    background-color: #fee9cc;
+    color: rgba(0, 0, 0, 0.75);
+    padding: 1px 3px;
+    font-size: 12px;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+}
+pre {
+    display: block;
+    padding: 14px;
+    margin: 0 0 18px;
+    line-height: 16px;
+    font-size: 11px;
+    border: 1px solid #d9d9d9;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+pre code {
+    background-color: #fff;
+    color:#737373;
+    font-size: 11px;
+    padding: 0;
+}
+@media screen and (min-width: 768px) {
+    body {
+        width: 748px;
+        margin:10px auto;
+    }
+}
+</style>
+<title>El Tao de Rails</title>
+</head>
+<body>
+<h1>El Tao de Rails</h1>
+
+<p>De ahora en adelante usaremos <a href="http://rubyonrails.org/">Ruby on Rails</a> para crear aplicaciones web. Ruby on Rails (llamémoslo RoR de ahora en adelante), es un <em>framework</em>: abstrae prácticas comunes y usa convenciones para hacer más rápido el desarrollo. Hoy haremos nuestra primera aplicación en ruby on rails.</p>
+
+<p>En esta ocasión, estaremos haciendo la aplicación que quedó para el primer examen: un pequeño administrador de proyectos. Vamos a poder crear tareas (<code>tasks</code>) que estén asignadas a usuarios (<code>users</code>) y vamos a permitir a los usuarios <strong>autenticarse</strong>. Haremos cada una de estas cosas en una iteración aparte. Esta guía está influenciada por <a href="http://tutorials.jumpstartlab.com/projects/blogger.html">esta guía en jumpstartlabs</a> y el <a href="http://ruby.railstutorial.org/ruby-on-rails-tutorial-book">railstutorial</a></p>
+
+<h2>git ready</h2>
+
+<p>Todo el progreso de este proyecto será parte de tu evaluación. Para ello, esta vez te tocará hacer a vos una copia de este repositorio y trabajar sobre ella.</p>
+
+<p>El repositorio original vivirá acá:</p>
+
+<p><a href="https://github.com/progra4/tasks_app">https://github.com/progra4/tasks_app</a></p>
+
+<p>Veamos cómo:</p>
+
+<p>Usaremos algo llamado <code>fork</code>: crea una copia del repositorio original (<code>progra4/tasks_app</code>) y la guardará en tu cuenta personal (mi nombre es <code>lfborjas</code>, así que lo guardará en <code>lfborjas/tasks_app</code>), para hacer eso, es tan simple como dar click en el botón fork de la página del proyecto (señalado con una flecha):</p>
+
+<p><img src="fork" alt="https://img.skitch.com/20120514-g9ydhtthq48stema91bcqmr2k1.jpg" /></p>
+
+<p>Y, una vez que lo copiés, deberías ver algo similar a esto (notá la URL):</p>
+
+<p><img src="hardcore_forking" alt="https://img.skitch.com/20120514-dh1rkr8qfugbchk3bajj1tfnie.jpg" /></p>
+
+<p>Que desaparecerá después de unos segundos y te mostrará el mismo listado de archivos que el proyecto original.</p>
+
+<p>Ahora,  <strong>desde tu copia</strong>, podés hacer un <code>git clone</code>.</p>
+
+<p>Una vez que hagás un git clone, se espera que tengás <strong>al menos un commit</strong> por cada iteración/cambio significativo. En clase decidiremos qué será cada tarea.</p>
+
+<h2>Preliminares</h2>
+
+<p>Si es la primera vez que usás ruby on rails, vas a tener que instalar <a href="http://www.sqlite.org/">sqlite</a> y el <a href="http://rubygems.org/gems/rails/versions/3.2.3">gem de rails</a> (estaremos usando la versión <code>3.2.3</code>), asimismo, instalaremos el <a href="http://rubygems.org/gems/heroku/versions/2.25.0">gem de heroku</a> para hacer nuestra aplicación públicamente accesible.</p>
+
+<p>Para instalar <code>sqlite</code> en <strong>linux</strong>, hacé lo siguiente:</p>
+
+<pre><code>sudo apt-get install sqlite3 libsqlite3-dev
+</code></pre>
+
+<p>Para instaler <code>sqlite</code> <strong>mac OSX</strong> (asumiendo que tenés <a href="http://mxcl.github.com/homebrew/">homebrew</a> instalado):</p>
+
+<pre><code>brew install sqlite
+</code></pre>
+
+<h2>Iteración 0. Creando la aplicación</h2>
+
+<p>Rails gira en torno a la terminal: tanto para crear una aplicación nueva como para agregar modelos o controladores, todo está basado en <a href="http://guides.rubyonrails.org/command_line.html">utilidades de línea de comandos</a>. Los comandos <em>universales</em> (que funcionarían en cualquier aplicación) usan el comando <code>rails</code>, los que dependen del proyecto (como por ejemplo, hacer algo en la base de datos específica del proyecto), usan el comando <code>rake</code></p>
+
+<p>Cuando querés crear una aplicación nueva en rails, usás el comando <code>rails new</code> seguido del nombre del proyecto:</p>
+
+<pre><code>rails new tasks
+</code></pre>
+
+<p>Esto creará la carpeta <code>tasks</code> y mostrará varias líneas que comienzan por <code>create</code>:</p>
+
+<pre><code>  create  
+  create  README.rdoc
+  create  Rakefile
+  create  config.ru
+  create  .gitignore
+  create  Gemfile
+  create  app
+  …
+</code></pre>
+
+<p>Y otras tantas líneas que demuestran que se están instalando las <em>gems</em> de las que depende rails:</p>
+
+<pre><code>run  bundle install
+Fetching gem metadata from https://rubygems.org/.........
+Using rack (1.4.1) 
+Installing i18n (0.6.0) 
+Installing multi_json (1.3.5) 
+…
+
+Your bundle is complete! Use `bundle show [gemname]` to see where a bundled gem is installed
+</code></pre>
+
+<p>Dos cosas a notar ahí: rails crea un <em>montón</em> de carpetas y archivos, pero prestémosle atención a algunos de ellos:</p>
+
+<ul>
+<li><strong>config.ru</strong>: el archivo que usará <code>rack</code> para iniciar el servidor.</li>
+<li><strong>Gemfile</strong>: el archivo donde declaramos todas las dependencias de nuestro proyecto, para declarar una dependencia usás <code>gem &lt;DEPENDENCIA&gt;</code> y las instalás usando <a href="http://gembundler.com/">bundler</a> con el comando <code>bundle install</code>. Así, hay un solo lugar donde estarán todas las gems de tu proyecto.</li>
+<li>La carpeta <code>app</code>: aquí están agrupados todos los <code>models</code>, <code>views</code> y <code>controllers</code> de tu proyecto, es donde más trabajaremos</li>
+<li>La carpeta <code>config</code>: aquí están diversas configuraciones/personalizaciones de tu proyecto, en especial, un par de archivos importantes:
+
+<ul>
+<li> <code>routes.rb</code>, define los <em>paths</em> (rutas), y que cumple con el concepto de <code>router/dispatch</code> que habíamos discutido previamente.</li>
+<li><code>database.yml</code>: contiene la configuración para la base de datos</li>
+</ul>
+</li>
+<li>La carpeta <code>db</code>, que contiene lo relacionado a la base de datos. En el archivo <code>db/schema.rb</code> encontraremos los campos que tienen los modelos.</li>
+</ul>
+
+
+<p>Usualmente, luego de crear un proyecto en rails, queremos seguirlo con <code>git</code>, así que podemos hacer esto:</p>
+
+<pre><code>git init 
+git add .
+git commit -m "creado el proyecto en rails"
+</code></pre>
+
+<p>Si te fijás, <code>rails</code> generó el archivo <code>.gitignore</code> que tiene reglas que definen qué archivos debería ignorar git (hay archivos que nunca queremos tener, como archivos temporales que editores como gedit crean)</p>
+
+<p>Una vez que creés el proyecto, podés levantar el servidor usando el comando <code>rails server</code></p>
+
+<pre><code>rails server
+</code></pre>
+
+<p>Y vas a ver algo similar a esto, si todo sale bien</p>
+
+<pre><code>=&gt; Booting WEBrick
+=&gt; Rails 3.2.3 application starting in development on http://0.0.0.0:3000
+=&gt; Call with -d to detach
+=&gt; Ctrl-C to shutdown server
+[2012-05-13 23:56:27] INFO  WEBrick 1.3.1
+[2012-05-13 23:56:27] INFO  ruby 1.9.3 (2012-02-16) [x86_64-darwin11.3.0]
+[2012-05-13 23:56:27] INFO  WEBrick::HTTPServer#start: pid=15206 port=3000
+</code></pre>
+
+<p>Si te fijás, hace exactamente lo mismo que hacíamos antes con <code>rackup start.ru -p 3000</code>, pero esta vez es un comando más estándar y más corto.</p>
+
+<p>Una vez que hagás eso, podrías ir a <a href="http://localhost:3000">http://localhost:3000</a> y verías algo como esto:</p>
+
+<p><img src="riding_rails" alt="https://img.skitch.com/20120514-jxfghu4xnditq3arxucidy2fq2.jpg" /></p>
+
+<h2>Iteración 1: Tasks</h2>
+
+<h3>1. Modelos</h3>
+
+<p>Como ya sabemos, la parte central de muchas aplicaciones web son los modelos, así que concentrémonos en eso primero.</p>
+
+<p>En rails, todo empieza con un <a href="http://railscasts.com/episodes/216-generators-in-rails-3">generador</a>: vos podrías agregar manualmente el archivo que representará la clase de tu modelo a la carpeta <code>app/models</code> y agregar el archivo que creará la tabla de tu modelo a la carpeta <code>db/migrate</code>, pero es tedioso escribir y memorizar tanto código y pasos, así que podés usar el generador de modelos (<code>rails generate model</code>) para que te ayude.</p>
+
+<p>Para generar un modelo, usualmente le decís cómo se llamará y qué propiedades tendrá. En este momento, nuestras tareas tendrán sólo una descripción y prioridad, nos ocuparemos del responsable en la siguiente iteración. Así que lo haremos con este comando</p>
+
+<pre><code>rails generate model Task description:string priority:integer
+</code></pre>
+
+<p>Si te fijás, después del nombre del modelo ponemos las propiedades con el tipo que han de tener. Este tipo es útil para la base de datos.</p>
+
+<p>Deberías ver algo similar a esto:</p>
+
+<pre><code>  invoke  active_record
+  create    db/migrate/20120514062804_create_tasks.rb
+  create    app/models/task.rb
+  invoke    test_unit
+  create      test/unit/task_test.rb
+  create      test/fixtures/tasks.yml
+</code></pre>
+
+<p>Ahí te dice qué archivos creó. Los que nos importan son el que está en <code>db/migrate</code>
+ y el que está en <code>app/models</code>. Hablemos un poco de la migración ahorita.</p>
+
+<h4>Migraciones</h4>
+
+<p>En una aplicación hecha en RoR se asume que vas a guardar las cosas en una base de datos, ¿qué es una base de datos? Un archivo glorificado: contiene tablas que representan un objeto; las columnas representan las propiedades del objeto y las filas representan instancias de cada objeto. Los programas que se encargan de gestionar bases de datos de este tipo se conocen como <em>relational database management systems (RDBMS)</em> y los más famosos en el mundo opensource son: <a href="http://www.mysql.com/">mySQL</a>, <a href="http://www.postgresql.org/">postgreSQL</a> y <a href="http://www.sqlite.org/">sqlite</a> (pero sqlite no es un RDBMS de verdad! Sólo sirve para usarlo como base de datos local porque es un programa liviano y no presenta inconvenientes, ¡nunca lo usés en un sitio de verdad!). Nosotros estamos usando acá sqlite, y si te fijás, eso está declarado en el archivo <code>config/database.yml</code>.</p>
+
+<p>Pues bien, ahora que sabés sobre los RDBMS, tenés que saber que uno interactúa con ellos usando un lenguaje declarativo llamado <a href="http://en.wikipedia.org/wiki/Sql">SQL</a>, y una de las cosas que uno hace con SQL es decirle al RDBMS &ldquo;mirá, voy a tener una tabla con tales y tales columnas de tales y tales tipos&rdquo;. Este tipo de instrucciones se puede perfectamente <a href="http://dev.mysql.com/doc/refman/5.1/en/create-table.html">hacer</a> <a href="http://dev.mysql.com/doc/refman/5.1/en/alter-table.html">manualmente</a>. Pero estas instrucciones, además de difíciles, pueden variar de un RDBMS a otro. Pero no temás, ¡rails es tu amigo! Y aquí entra el concepto de <strong>migración</strong>: una migración es un script en ruby que crea o modifica tabla en el RDBMS. Así que cada vez que creés un modelo (decidás qué propiedades tendrá) o querás agregar o quitar una propiedad de un modelo, en vez de hacerlo directamente con el RDBMS, harás una migración. Por ejemplo, la migración que acabamos de crear (el archivo que está en <code>db/migrate</code> cuyo nombre termina en <code>create_tasks.rb</code>) se ve así:</p>
+
+<pre><code>class CreateTasks &lt; ActiveRecord::Migration
+  def change
+    create_table :tasks do |t|
+      t.string :description
+      t.integer :priority
+
+      t.timestamps
+    end
+  end
+end
+</code></pre>
+
+<p>Si te fijás, se puede leer más o menos en inglés: &ldquo;crear la tabla <em>tasks</em> y dentro de ella: habrá una columna <em>string</em> que sea la descripción y una columna <em>integer</em> que sea la prioridad&rdquo;. También agregó una línea que dice <code>timestamps</code>. Los timestamps son dos columnas: <code>created_at</code> y <code>updated_at</code> que rails agrega por defecto a todas las tablas, son útiles para saber cuándo se creó y guardó una instancia o cuando se modificó una instancia, respectivamente. Una cosa a notar es la convención que <strong>creamos los modelos en singular (<code>Tasks</code>) pero las tablas tendrán el nombre en plural (<code>tasks</code>)</strong>.</p>
+
+<p>Ahora bien, este archivo sólo <strong>declara</strong> qué hará la migración, pero aún no hemos hablado con la base de datos. Para que la migración se aplique, vas a correr un comando específico a tu aplicación (recordá que esos se corren con <code>rake</code>)</p>
+
+<pre><code>rake db:migrate
+</code></pre>
+
+<p>Y si todo sale bien, verás algo como esto:</p>
+
+<pre><code>==  CreateTasks: migrating ====================================================
+-- create_table(:tasks)
+   -&gt; 0.0012s
+==  CreateTasks: migrated (0.0013s) ===========================================
+</code></pre>
+
+<p>Y, después de esto, después de que la tabla se haya creado en la base de datos, vas a fijarte que existe un nuevo archivo: <code>db/schema.rb</code>, este refleja la estructura actual de la base de datos (cuándo fue la última vez que cambió, qué tablas hay y qué columnas contienen), ahorita se ha de ver así:</p>
+
+<pre><code>ActiveRecord::Schema.define(:version =&gt; 20120514062804) do
+
+  create_table "tasks", :force =&gt; true do |t|
+    t.string   "description"
+    t.integer  "priority"
+    t.datetime "created_at",  :null =&gt; false
+    t.datetime "updated_at",  :null =&gt; false
+  end
+
+end
+</code></pre>
+
+<p>Si te fijás, <code>:version =&gt; 20120514062804</code> se refiere a la fecha, hora, minutos, segundos y milisegundos en que fue modificada la estructura de la base de datos por última vez (va a ser diferente para vos) y abajo hay algo similar a una migración, con todas las tablas y columnas.</p>
+
+<p>Algo interesante a notar es la propiedad <code>:null =&gt; false</code> en las columnas <code>created_at</code>, esto es un <em>constraint</em> que significa que el valor de esta columna nunca debería estar vacío (de todas formas vos no vas a llenarlos prácticamente nunca, estos atributos los maneja rails automáticamente, sólo preocupate por las columnas que vos creés explícitamente).</p>
+
+<p>Podés ver a los archivos en <code>db/migrate</code> como la intención de cambiar la base de datos y al archivo <code>db/schema</code> como el resultado de haber seguido esa intención.</p>
+
+<p>Otra cosa que tenés que saber, aunque no salga en ninguno de los dos archivos anteriores</p>
+
+<p>Ok, ahora que sabemos todo sobre las migraciones, veamos qué hay en nuestro modelo (en el archivo <code>app/models/Task.rb</code>):</p>
+
+<pre><code>class Task &lt; ActiveRecord::Base
+  attr_accessible :description, :priority
+end
+</code></pre>
+
+<p>Si te fijás, no hay mucho: todos los métodos interesantes están en la superclase <code>ActiveRecord::Base</code>, dentro de poco jugaremos con ellos. Una cosa que te podés fijar es en el uso del método <code>attr_accessible</code>: no lo confundás con <code>attr_accessor</code>, que es un método de ruby, <code>attr_accessible</code> es un método de la librería <code>ActiveRecord</code> de rails y lo que significa es que estos atributos (<code>description</code> y <code>priority</code>) pueden ser modificados directamente por vos. Los atributos que no estén aquí listados no pueden ser cambiados (por ejemplo, los atributos <code>created_at</code> y <code>updated_at</code> no los podés modificar a través de métodos como <code>create</code> o <code>update</code>, estos métodos, que discutiremos dentro de poco, se conocen como métodos de <strong>mass assignment</strong>). Este modelo es similar a lo que hemos estado haciendo: representa un recurso, lo que podemos hacer con los recursos y se encarga de guardarlo en la base de datos y sacarlo de allí cuando lo necesitemos.</p>
+
+<h4>Jugando con los modelos</h4>
+
+<p>Como recordarás, a veces nos convenía probar las clases que hacíamos en <code>irb</code> para ver si funcionaban como esperábamos, usualmente abríamos una sesión de <code>irb</code> y escribíamos unos cuantos <code>require</code> para importar nuestras clases. En rails hay una convención divertida: <strong>no te toca importar prácticamente nada, todo se importa automáticamente al iniciar el servidor (o, como lo llama la gente de rails, <em>loading the environment</em>)</strong>. Y rails te ayuda hasta en la consola, dándote el comando <code>rails console</code></p>
+
+<pre><code>rails console
+</code></pre>
+
+<p>Que carga una sesión de <code>irb</code> pero con todo tu &ldquo;entorno&rdquo; ya cargado. Escribilo, y verás algo como esto:</p>
+
+<pre><code>Loading development environment (Rails 3.2.3)
+1.9.3p125 :001 &gt;
+</code></pre>
+
+<p>Vamos a hacer una rápida sesión para ver qué encontramos:</p>
+
+<pre><code>1.9.3p125 :001 &gt; Task
+ =&gt; Task(id: integer, description: string, priority: integer, created_at: datetime, updated_at: datetime)
+</code></pre>
+
+<p>Rails tiene la decencia de cambiar el método <code>inspect</code> de la clase <code>ActiveRecord::Base</code> para mostrar todas las columnas que tiene la tabla. Como te decía, además de las dos que vos declaraste, agrega automáticamente a <strong>todos</strong> los modelos los atributos <code>id</code>, <code>created_at</code> y <code>updated_at</code>.</p>
+
+<pre><code>1.9.3p125 :002 &gt; Task.all
+  Task Load (0.3ms)  SELECT "tasks".* FROM "tasks" 
+ =&gt; [] 
+</code></pre>
+
+<p>Aquí, muy interesantemente, nos está mostrando cómo el método <code>all</code> usa SQL para buscar <em>todas</em> las instancias de la clase <code>Task</code> en la tabla <code>tasks</code> de la base de datos. Al final nos devuelve un arreglo vacío, como es de esperar.</p>
+
+<p>Probemos crear una instancia de <code>Task</code>:</p>
+
+<pre><code>1.9.3p125 :003 &gt; i = Task.new(description: "aprender rails", priority: 10)
+ =&gt; #&lt;Task id: nil, description: "aprender rails", priority: 10, created_at: nil, updated_at: nil&gt;
+</code></pre>
+
+<p>Tomá nota que esto <strong>sólo creó la instancia</strong>, pero no la ha guardado en la base de datos: por eso no le ha asignado un <code>id</code>, ni los timestamps. De modo que correr <code>Task.all</code> en este punto nos seguirá dando un arreglo vacío. Guardemos esta instancia a la base de datos usando el método <code>save</code>:</p>
+
+<pre><code>1.9.3p125 :005 &gt; i.save
+   (0.2ms)  begin transaction
+  SQL (91.7ms)  INSERT INTO "tasks" ("created_at", "description", "priority", "updated_at") VALUES (?, ?, ?, ?)  [["created_at", Mon, 14 May 2012 07:32:22 UTC +00:00], ["description", "aprender rails"], ["priority", 10], ["updated_at", Mon, 14 May 2012 07:32:22 UTC +00:00]]
+   (3.0ms)  commit transaction
+ =&gt; true 
+</code></pre>
+
+<p>Incluso podés cambiar atributos de la instancia y volver a grabarla</p>
+
+<pre><code>1.9.3p125 :014 &gt; i.priority = 6
+ =&gt; 6 
+1.9.3p125 :015 &gt; i.save
+   (0.1ms)  begin transaction
+   (0.4ms)  UPDATE "tasks" SET "priority" = 6, "updated_at" = '2012-05-14 07:42:52.258642' WHERE "tasks"."id" = 1
+   (46.7ms)  commit transaction
+ =&gt; true
+</code></pre>
+
+<p>(notá que esta vez usó la sentencia SQL <code>UPDATE</code> en lugar de <code>CREATE</code>, porque la fila ya existe en la base de datos)</p>
+
+<p>Una vez más, rails nos explica qué pasos está tomando para hablar con el RDBMS, y, si logra guardar la instancia, nos devuelve <code>true</code>. Si volvemos a tratar de obtener todas las instancias:</p>
+
+<pre><code>1.9.3p125 :006 &gt; Task.all
+  Task Load (0.3ms)  SELECT "tasks".* FROM "tasks" 
+ =&gt; [#&lt;Task id: 1, description: "aprender rails", priority: 10, created_at: "2012-05-14 07:32:22", updated_at: "2012-05-14 07:32:22"&gt;]
+</code></pre>
+
+<p>Tendremos, esta vez, un arreglo con un solo elemento. Probemos crear otra instancia, esta vez con el método <code>create</code>:</p>
+
+<pre><code>1.9.3p125 :007 &gt; Task.create(description: "pasar la clase", priority: 6)
+   (0.1ms)  begin transaction
+  SQL (0.6ms)  INSERT INTO "tasks" ("created_at", "description", "priority", "updated_at") VALUES (?, ?, ?, ?)  [["created_at", Mon, 14 May 2012 07:34:28 UTC +00:00], ["description", "pasar la clase"], ["priority", 6], ["updated_at", Mon, 14 May 2012 07:34:28 UTC +00:00]]
+   (2.8ms)  commit transaction
+ =&gt; #&lt;Task id: 2, description: "pasar la clase", priority: 6, created_at: "2012-05-14 07:34:28", updated_at: "2012-05-14 07:34:28"&gt; 
+</code></pre>
+
+<p>Si te fijás, este método hace la instancia y la guarda <em>en un solo paso</em> ¡conveniente! (espero que en este punto hayás notado que rails está obsesionado con hacerte fácil la vida). Ahora <code>Task.all</code> te debería dar un arreglo con dos elementos. Probemos con otros métodos: <code>count</code>, <code>where</code>, <code>exists?</code> y las variantes de <code>find</code>:</p>
+
+<pre><code>1.9.3p125 :008 &gt; Task.count
+   (0.3ms)  SELECT COUNT(*) FROM "tasks" 
+ =&gt; 2 
+1.9.3p125 :009 &gt; Task.where(priority: 6)
+  Task Load (0.2ms)  SELECT "tasks".* FROM "tasks" WHERE "tasks"."priority" = 6
+ =&gt; [#&lt;Task id: 1, description: "aprender rails", priority: 6, created_at: "2012-05-14 07:32:22", updated_at: "2012-05-14 07:42:52"&gt;, #&lt;Task id: 2, description: "pasar la clase", priority: 6, created_at: "2012-05-14 07:34:28", updated_at: "2012-05-14 07:34:28"&gt;]
+1.9.3p125 :010 &gt; Task.exists?(priority: 10)
+  Task Exists (0.2ms)  SELECT 1 FROM "tasks" WHERE "tasks"."priority" = 10 LIMIT 1
+ =&gt; false 
+1.9.3p125 :011 &gt; Task.find(2)
+  Task Load (0.4ms)  SELECT "tasks".* FROM "tasks" WHERE "tasks"."id" = ? LIMIT 1  [["id", 2]]
+ =&gt; #&lt;Task id: 2, description: "pasar la clase", priority: 6, created_at: "2012-05-14 07:34:28", updated_at: "2012-05-14 07:34:28"&gt; 
+ 1.9.3p125 :017 &gt; Task.find_by_priority(6)
+  Task Load (0.2ms)  SELECT "tasks".* FROM "tasks" WHERE "tasks"."priority" = 6 LIMIT 1
+ =&gt; #&lt;Task id: 1, description: "aprender rails", priority: 6, created_at: "2012-05-14 07:32:22", updated_at: "2012-05-14 07:42:52"&gt;
+ 1.9.3p125 :018 &gt; Task.find_all_by_priority(6)
+  Task Load (0.4ms)  SELECT "tasks".* FROM "tasks" WHERE "tasks"."priority" = 6
+ =&gt; [#&lt;Task id: 1, description: "aprender rails", priority: 6, created_at: "2012-05-14 07:32:22", updated_at: "2012-05-14 07:42:52"&gt;, #&lt;Task id: 2, description: "pasar la clase", priority: 6, created_at: "2012-05-14 07:34:28", updated_at: "2012-05-14 07:34:28"&gt;]
+</code></pre>
+
+<p>si te fijás, el método <code>find_by_priority</code> sólo devuelve el <em>primer</em> objeto que cumpla los requisitos, mientras que <code>where</code> y <code>find_all_by_priority</code> devuelven todos.</p>
+
+<p>Y qué pasa si quisiéramos actualizar una instancia que está en la base de datos, usamos el método <code>update_attributes</code>:</p>
+
+<pre><code>1.9.3p125 :022 &gt; i2 = Task.find(2)
+  Task Load (0.2ms)  SELECT "tasks".* FROM "tasks" WHERE "tasks"."id" = ? LIMIT 1  [["id", 2]]
+ =&gt; #&lt;Task id: 2, description: "pasar la clase", priority: 6, created_at: "2012-05-14 07:34:28", updated_at: "2012-05-14 07:34:28"&gt; 
+1.9.3p125 :023 &gt; i2.update_attributes(description: "pasar progra4", priority: 7)
+   (0.1ms)  begin transaction
+   (0.4ms)  UPDATE "tasks" SET "description" = 'pasar progra4', "priority" = 7, "updated_at" = '2012-05-14 07:54:26.321018' WHERE "tasks"."id" = 2
+   (50.1ms)  commit transaction
+ =&gt; true 
+</code></pre>
+
+<p>Y veamos qué cosas pueden salir mal:</p>
+
+<pre><code>1.9.3p125 :019 &gt; Task.find(666)
+  Task Load (0.1ms)  SELECT "tasks".* FROM "tasks" WHERE "tasks"."id" = ? LIMIT 1  [["id", 666]]
+ActiveRecord::RecordNotFound: Couldn't find Task with id=666
+1.9.3p125 :020 &gt; Task.find_by_id(666)
+  Task Load (0.3ms)  SELECT "tasks".* FROM "tasks" WHERE "tasks"."id" = 666 LIMIT 1
+ =&gt; nil
+ 1.9.3p125 :021 &gt; Task.where(id: 666)
+  Task Load (0.2ms)  SELECT "tasks".* FROM "tasks" WHERE "tasks"."id" = 666
+ =&gt; [] 
+</code></pre>
+
+<p>si te fijás, el método <code>find</code> explota si no encuentra lo que busca, mientras que los <code>find_by</code> y <code>where</code>, no.</p>
+
+<p>Eso es todo con los modelos por ahora.</p>
+
+<p>Este es un buen momento para hacer commit :)</p>
+
+<p>Vas a encontrar más información sobre migraciones aquí: <a href="http://guides.rubyonrails.org/migrations.html">http://guides.rubyonrails.org/migrations.html</a>  y más sobre los métodos de <code>ActiveRecord::Base</code>, aquí: <a href="http://api.rubyonrails.org/classes/ActiveRecord/Base.html">http://api.rubyonrails.org/classes/ActiveRecord/Base.html</a></p>
+
+<p>Y con esto podemos pasar a la siguiente parte de esta iteración.</p>
+
+<h4>Validaciones</h4>
+
+<p>En la primera parte vimos cómo rails nos ayuda a interactuar con la base de datos. Pero los modelos tienen aún otra responsabilidad: asegurarse que los datos están correctos. Por ejemplo, en esta aplicación no queremos:</p>
+
+<ul>
+<li>Tareas con descripciones en blanco</li>
+<li>Tareas con descripciones repetidas</li>
+<li>Tareas con prioridades menores que 0</li>
+</ul>
+
+
+<p>Para forzar a que estas reglas se cumplan, introduciremos el concepto de <strong>validación</strong>.</p>
+
+<p>Rails nos ofrece ciertos métodos que podemos agregar a nuestras clases para forzar estas reglas, editemos el modelo que vive en <code>app/models/task.rb</code>:</p>
+
+<pre><code> class Task &lt; ActiveRecord::Base
+  attr_accessible :description, :priority
+
+  validates_presence_of :description
+  validates_uniqueness_of :description
+  validates :priority, numericality: {:greater_than =&gt; 0}
+
+  before_validation :clean_description, if: "description.present?"
+
+  private
+  def clean_description
+    self.description = self.description.strip.capitalize
+  end
+ end
+</code></pre>
+
+<p>Hablemos de esto por partes:</p>
+
+<ul>
+<li><code>validates_presence_of</code> es un método que genera un validador para el atributo (o atributos) que se le provean. Valida que el atributo tenga un valor no-nulo</li>
+<li><code>validates_uniqueness_of</code>: valida que el atributo (columna) sea único entre todas las filas ya existentes de la tabla</li>
+<li><code>validates</code> es general, y sirve para construir validadores más complejos. En este caso validamos la <a href="http://guides.rubyonrails.org/active_record_validations_callbacks.html#numericality">&ldquo;numericality&rdquo;</a> del atributo <code>priority</code> para asegurarnos que sea mayor que cero.</li>
+</ul>
+
+
+<p>Además de los métodos que generaron validadores, tenemos otro método, que genera un &ldquo;callback&rdquo;. En RoR hay un concepto interesante con los modelos: <strong>eventos</strong>, cada vez que un modelo se crea, actualiza o destruye, ciertos eventos son reportados al sistema, y pueden ser usados por nosotros. En esta ocasión, estamos diciendo &ldquo;antes de que ocurra el evento <code>validation</code> quiero que un método se ejecute&rdquo;. Y estamos usando un símbolo para referirnos a un método privado que definimos después. Y, además, usamos la opción <code>if</code> para decir que ese método sólo debería ejecutarse si hay una descripción presente. El método en sí simplemente elimina espacios en blanco y capitaliza las descripciones.</p>
+
+<p>Probemos las validaciones en una sesión de irb:</p>
+
+<p>Y, ahora, es buena idea hacer otro commit.</p>
+
+<p>Más información sobre validaciones y &ldquo;callbacks&rdquo; acá: <a href="http://guides.rubyonrails.org/active_record_validations_callbacks.html">http://guides.rubyonrails.org/active_record_validations_callbacks.html</a></p>
+
+<h3>2. El router</h3>
+
+<h3>3. El controlador y las vistas</h3>
+
+<h2>Iteración 2: Los usuarios</h2>
+
+<h3>1. El modelo usuarios y la asociación con Task</h3>
+
+<p>Las propiedades son <code>string</code> por defecto.</p>
+
+<pre><code>rails g model User email password_digest
+rails g migration AddUserIdToTasks user_id:integer
+</code></pre>
+
+<h3>2. Administración de usuarios</h3>
+
+<pre><code>rails g scaffold_controller users index show new create edit update destroy 
+</code></pre>
+
+<h3>3. Asociaciones en forms</h3>
+
+<h3>3. Autenticación</h3>
+
+<p><a href="http://railscasts.com/episodes/250-authentication-from-scratch-revised">http://railscasts.com/episodes/250-authentication-from-scratch-revised</a> y <a href="http://railscasts.com/episodes/250-authentication-from-scratch">http://railscasts.com/episodes/250-authentication-from-scratch</a></p>
+
+<h2>Más recursos</h2>
+
+<ul>
+<li><a href="http://railscasts.com/">Railscasts</a></li>
+<li><a href="http://guides.rubyonrails.org/">Rails Guides</a></li>
+<li><a href="http://api.rubyonrails.org">Rails API Docs</a></li>
+<li><a href="http://ruby.railstutorial.org/ruby-on-rails-tutorial-book">Rails Tutorial</a></li>
+<li><a href="http://railsforzombies.com/">Rails for Zombies</a></li>
+<li><a href="http://tutorials.jumpstartlab.com/">Jumpstart Labs</a></li>
+</ul>
+
+
+<h2>Referencias</h2>
+
+<ul>
+<li><a href="http://tutorials.jumpstartlab.com/projects/blogger.html">A first rails app</a></li>
+<li><a href="http://railscasts.com/episodes/310-getting-started-with-rails">Getting started with rails</a></li>
+<li><a href="http://railscasts.com/episodes/250-authentication-from-scratch-revised?view=asciicast">Authentication from scratch</a></li>
+</ul>
+
+</body>
+</html>
