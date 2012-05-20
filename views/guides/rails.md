@@ -371,8 +371,354 @@ Más información sobre validaciones y "callbacks" acá: <http://guides.rubyonra
 
 ###2. El router
 
+Ahora, no es divertido si sólo tenemos nuestros modelos en la aplicación; después de todo, es una aplicación web y todo el centro es HTTP. Según recordarás de los experimentos que hicimos en el primer parcial, todo el secreto de HTTP es poder usar los _verbos_ y _rutas_ para poder interactuar con los _recursos_. Ya tenemos un modelo que representa los recursos, ahora hablemos de cómo _configuraríamos_ las rutas.
+
+La convención de rails es que usemos los principios de arquitectura [REST](http://blog.steveklabnik.com/posts/2011-08-07-some-people-understand-rest-and-http). La forma de hacerlo es editando el archivo `config/routes.rb` y diciéndole a rails que tendremos nuestras tareas como _recursos_:
+
+    Tasks::Application.routes.draw do
+      resources :tasks
+    end
+    
+La convención en rails es ver las cosas como recursos, y las rutas y quién se encarga de ellas se decide automáticamente. Para ver las combinaciones de acción + ruta que nuestra aplicación espera entender, podemos usar el comando `rake routes`:
+
+        tasks GET    /tasks(.:format)          tasks#index
+              POST   /tasks(.:format)          tasks#create
+     new_task GET    /tasks/new(.:format)      tasks#new
+    edit_task GET    /tasks/:id/edit(.:format) tasks#edit
+         task GET    /tasks/:id(.:format)      tasks#show
+              PUT    /tasks/:id(.:format)      tasks#update
+              DELETE /tasks/:id(.:format)      tasks#destroy
+              
+Esa es la tabla de rutas, si te fijás, es justo la convención que ya sabíamos. Expliquemos qué significa cada columna:
+
+* La primera columna es el _alias_ para la ruta. Así, la primera ruta, la que representa la colección de todos los `tasks` se llama, sorprendentemente, `tasks`, y las acciones que representan recursos extra, como _new_ y _edit_, tienen su propio nombre. Recordá este concepto de alias para más tarde.
+* La segunda y tercera columnas son el verbo + ruta, como ya sabemos, eso representa una acción única en nuestra aplicación. Algo a notar aquí son los valores que parecen símbolos (`:format`, `:id`), estos son __segmentos dinámicos__ de las rutas y serán incluidos en el hash `params` al que tienen acceso los controladores.
+* La última columna es parte de la convención: como dijimos que nuestro recurso se llama `tasks`, espera que exista un controlador llamado `tasks` (en realidad, `TasksController`) que tenga métodos para las siete acciones posibles sobre un recurso (`index`, `create`, `new`, `edit`, `show`, `update`, `destroy`)
+
+
+Ahora ya le prometimos a nuestra aplicación que manejaremos los recursos `tasks` y vemos en la __tabla de rutas__ que espera que tengamos un controlador, así que hagamos eso realidad en el siguiente paso.
+
+    
+Más información sobre las rutas está en [las guías oficiales de rails](http://guides.rubyonrails.org/routing.html)
 
 ###3. El controlador y las vistas
+
+Así como comenzamos sabiendo que necesitaríamos representar nuestros recursos como modelos y usamos un generador para generar los archivos necesarios; ahora nos dimos cuenta que necesitamos un controlador, y también hay un generador:
+
+    rails generate controller tasks index show new create edit update destroy
+    
+El generador de controladores recibe dos tipos de parámetros: el nombre del controlador (en este caso, `tasks`, como prometimos al router) y las acciones que ese controlador tendrá, en este caso, las siete acciones básicas que pueden hacerse sobre recursos.
+
+Veamos qué generó:
+
+      create  app/controllers/tasks_controller.rb
+       route  get "tasks/destroy"
+       route  get "tasks/update"
+       route  get "tasks/edit"
+       route  get "tasks/create"
+       route  get "tasks/new"
+       route  get "tasks/show"
+       route  get "tasks/index"
+      invoke  erb
+      create    app/views/tasks
+      create    app/views/tasks/index.html.erb
+      create    app/views/tasks/show.html.erb
+      create    app/views/tasks/new.html.erb
+      create    app/views/tasks/create.html.erb
+      create    app/views/tasks/edit.html.erb
+      create    app/views/tasks/update.html.erb
+      create    app/views/tasks/destroy.html.erb
+      invoke  test_unit
+      create    test/functional/tasks_controller_test.rb
+      invoke  helper
+      create    app/helpers/tasks_helper.rb
+      invoke    test_unit
+      create      test/unit/helpers/tasks_helper_test.rb
+      invoke  assets
+      invoke    coffee
+      create      app/assets/javascripts/tasks.js.coffee
+      invoke    scss
+      create      app/assets/stylesheets/tasks.css.scss
+      
+Si te fijás, creó el controlador `tasks_controller` en la carpeta `controllers`, agregó unas cuantas rutas a `config/routes.rb` (esas están incorrectas, las podemos borrar) y además generó una plantilla para cada una de las acciones. Como algo extra, notá que generó un archivo llamado `tasks_helper` (ya hablaremos de los helpers), un archivo para todo el javascript relacionado a las vistas (rails usa un dialecto de javascript muy similar a ruby llamado [coffeescript](http://coffeescript.org/)) y otro archivo para todo el css relacionado a las vistas también (y rails usa otro dialecto de css, llamado [sass](http://sass-lang.com/))
+
+Por ahora, concentrémonos en el controlador y las vistas. Nuestra meta en esta etapa será poder crear una `task`, poder mostrarla y poder jugar con la lista de `tasks`
+
+Notá que también agregó varias instrucciones `get` al router, esas podés borrarlas, ya de las rutas de nuestro recurso se encarga la instrucción `resources :tasks`
+
+####Creando una tarea: el formulario
+
+La clase base de todos los controladores, `ActionController::Base`, agrega una convención interesante: luego de ejecutar el método de una acción, va a buscar una plantilla en la carpeta de `views` del controller, la llenará y la usará como respuesta. De modo que, en el controlador `TasksController` (dentro de `app/controllers/tasks_controller.rb`), esta acción, por ejemplo:
+
+    def new
+    end
+    
+Luego de ser ejecutada, responderá con un cuerpo html con el contenido de la plantilla `app/views/tasks/new.html.erb`. Así que llenemos _esa_ plantilla con el formulario para crear un task.
+
+Rails tiene varios [métodos de ayuda](http://guides.rubyonrails.org/form_helpers.html) para formularios, usémoslos para generar un formulario para crear tareas:
+
+    <h1>Create a task</h1>
+    <%= form_for @task do |f| %>
+      <p>
+        <%= f.label :description %>
+        <%= f.text_area :description %>
+      </p>
+      <p>
+        <%= f.label :priority %>
+        <%= f.number_field :priority %>
+      </p>
+      <p>
+        <%= f.submit %>
+      </p>
+    <% end %>
+    
+Si te fijás, requiere que proveamos la variable `@task` en el binding. ¿Por qué una variable de instancia? Porque cuando rails llena plantillas, usa el binding de __todo__ el controller (en cada solicitud, creará una _nueva_ instancia del controlador), así que no nos servirían variables locales de métodos. En el archivo `app/controllers/tasks_controller.rb`, cambiemos el método `new` para que provea esa variable:
+
+    def new
+        @task = Task.new
+    end
+
+Ahora, algo curioso del método `form_for` es que es inteligente: sabe qué tag crear basado en la variable que le demos:
+
+* Usa el método `class` para saber de qué clase es instancia (en este caso, `Task`) y a partir de allí asume que tenemos un controlador con ese nombre en plural (`TasksController`) y que estamos usando las convenciones REST (es decir, que tenemos un método `create` relacionado a `POST /tasks` y un `update` relacionado a `PUT /tasks/:id`).
+* A partir del estado de la instancia (si es nueva o si ya está guardada en la base de datos) y las convenciones que mencionamos arriba, decide qué `action` y qué `method` usar (si es una nueva instancia, hará `POST` a `/tasks`) y si es una instancia ya guardada antes, hará `PUT` a `/tasks/:id`.
+
+Ahora bien, si ejecutamos el servidor:
+
+    rails server
+
+Llenamos el formulario y hacemos _submit_, podremos ver algo similar a esto en el log (la salida en terminal) del servidor (toda esta información, además de salir a la pantalla, también está en el archivo `log/development.log`):
+
+    Started POST "/tasks" for 127.0.0.1 at 2012-05-20 01:48:08 -0600
+    Processing by TasksController#create as HTML
+      Parameters: {"utf8"=>"✓", "authenticity_token"=>"ph6/DQPV4Oju19f7y5KidRKrEa0AN3FAMuGAmqVcE/8=", "task"=>{"description"=>"asdfasdf", "priority"=>"1"}, "commit"=>"Create Task"}
+      Rendered tasks/create.html.erb within layouts/application (0.3ms)
+    Completed 200 OK in 18ms (Views: 17.2ms | ActiveRecord: 0.0ms)
+    
+El [log](http://railscasts.com/episodes/56-the-logger) es una de las piezas de información más importantes que rails nos provee: dice todo lo que pasa con las solicitudes que entran y cómo construye las respuestas, veamos en detalle cada línea de esta solicitud-respuesta:
+
+En cuanto a la solicitud:
+
+* `Started POST "/tasks" ` nos reporta qué ruta fue llamada por qué verbo, desde qué dirección remota a qué hora y fecha
+* `Processing by TasksController#create as HTML` nos dice que a esa combinación de verbo + ruta le está asignando como responsable el método `create` de una instancia de `TasksController`, como esperaríamos. Es interesante notar que, por defecto, el formato en el que lidia con las solicitudes es `HTML`. Como mencionamos en los segmentos dinámicos arriba, podríamos pedirlo en otro agregando la extensión a la ruta  (`/tasks.json` pediría la respuesta como `JSON`, por ejemplo), o usando el ya conocido header `Accept`.
+* Los parámetros incluidos en la solicitud representados en un hash, nótese que entre estos está el hash `task`, que tiene las propiedades que introdujimos en el form (`utf8` fuerza a internet explorer a enviar los forms en unicode correcto, `authenticity_token` es parte de una [estrategia de seguridad](http://guides.rubyonrails.org/security.html#cross-site-request-forgery-csrf) para evitar que otros sitios simulen ser parte de la aplicación)
+
+En cuanto a la respuesta:
+
+* Nos informa que llenó la plantilla `tasks/create.html.erb` porque ese es precisamente el comportamiento por defecto. En realidad no queremos eso, queremos que se cree una tarea y nos redirija, ya haremos eso.
+* Por último, nos dice que terminó de responder, y con qué estado.
+
+
+####Creando una tarea: la acción `create`
+
+Ya que sabemos qué información tendríamos para crear una tarea, podríamos hacer algo como esto, aprovechando el método `params` que todos los controladores tienen, que devuelve un hash con los parámetros de la solicitud actual:
+
+    @task = Task.create(params[:task])
+
+También es buena idea, como hacíamos antes, redirigir al cliente a un lugar donde pueda ver que en efecto se creó la tarea. Esta vez, hagamos que vea la tarea individual usando el método `redirect_to`:
+
+    redirect_to "/tasks/#{@task.id}"
+    
+Ahora bien, una buena idea en cualquier aplicación web es no depender de las rutas explícitas, porque podrían cambiar, y en su lugar aprovechar los __alias__, y los métodos que terminan en  `_path` o en `_url`:
+
+    redirect_to task_path(id: @task.id)
+    
+Recordando que en la ruta para una tarea individual (a task path) necesitamos el segmento dinámico `:id`.
+
+Pero puede ser más corto aún: como estamos tratando los `tasks` como recursos (recordá que hasta declaramos `resources :tasks` en el router), podemos dejar que rails asuma que estamos respetando REST, sólo darle la instancia y que él adivine la ruta:
+
+    redirect_to @task
+    
+De modo que, en el controlador (en `app/controllers/tasks_controller.rb`), definiríamos el método `create` así:
+
+    def create
+        @task = Task.create params[:task]
+        redirect_to @task
+    end
+
+Al ser redirigidos a `/tasks/:id`, se estaría haciendo un `GET` a esa ruta. Según nuestra tabla de rutas (recordá que se obtiene con `rake routes`), de esta acción está a cargo el método `show`.
+
+¿Qué queremos en el método `show`? Pues simplemente buscar una tarea con el identificador único incluido en la ruta y mostrarla en una plantilla, así que se vería  algo así:
+
+    def show
+        @task = Task.find(params[:id])
+     end
+     
+Dos cosas a notar de arriba:
+* Usamos el método `find` para encontrar _en la base de datos_ mediante el identificador único.
+* De entre los parámetros, sacamos el segmento dinámico `:id` (recordá que la ruta es `tasks/:id`)
+
+Lo asignamos a una variable de instancia para que esté disponible en el _binding_ de la instancia del controlador en esta solicitud y luego dejamos que el comportamiento por defecto (llenar la plantilla `show.html.erb`) ocurra. Editemos esa plantilla (en `app/views`)
+
+    <p>
+      Task with description <%= @task.description %>
+      and priority <%= @task.priority %>
+    </p>
+    <%= link_to "All tasks", tasks_path %>
+    
+Suficientemente sencillo. Fijate, sin embargo, en la última línea: usamos el método de ayuda ([helper method](http://api.rubyonrails.org/classes/ActionView/Helpers/UrlHelper.html)) `link_to` para generar un hipervínculo cuyo texto sea "All tasks" y su `href` sea la ruta que el método `tasks_path` devuelve (que es la ruta a la colección: `/tasks`). De este modo, podríamos ir a ver la lista de todos los tasks.
+
+Y probemos con `rails server` otra vez crear una tarea en `/tasks/new` y esta vez debería crearla y redirigirnos a la tarea recién creada. Si todo funciona, __es buen tiempo para hacer commit__.
+
+
+####Mostrando todas las tareas
+
+Ahora bien, para mostrar todas las tareas, ya sabemos que tenemos que encargarnos de la acción `index` en el controlador (`app/controllers/tasks_controller.rb`):
+
+    def index
+        @tasks = Task.all
+    end
+
+Y de la plantilla correspondiente (`app/views/tasks/index.html.erb`):
+
+    <ol>
+      <% @tasks.each do |task|%>
+        <li>
+          <%= task.description %>
+          <%= link_to "show priority", task %>
+       </li>
+      <% end %>
+    </ol>
+
+Un par de observaciones interesantes: estamos usando código encerrado entre `<% %>` (nótese la falta del signo igual) para ejecutar código de ruby, iterar entre todas las tareas. Y también, que de segundo parámetro al método `link_to` sólo estamos enviando la instancia de tarea, no una ruta. ¿Cómo funciona esto? Al igual que `form_for`, usa [reflexión](http://en.wikipedia.org/wiki/Reflection_(computer_programming)) para adivinar que esta instancia pertenece a la clase `Task` y asumir que es un recurso y que, como tal, su ruta se vería `/tasks/:id`.
+
+¿Qué pasaría si quisiéramos borrar una tarea? Si recordás HTTP, deberíamos hacer un `DELETE` a la ruta miembro. Rails nos permite hacer algo como lo siguiente:
+
+    <%= link_to "delete", task, :method => :delete, :confirm => "are you sure?" %>
+
+Que haría lo siguiente: usar javascript para preguntarnos si de veras queremos borrar el recurso y luego, siempre con javascript, enviar una solicitud `DELETE` a la ruta especificada en el `anchor`. Con eso en mente, nuestra plantilla se vería así:
+
+    <ol>
+      <% @tasks.each do |task|%>
+        <li>
+          <%= task.description %>
+          <%= link_to "show priority", task %>
+          <%= link_to "delete", task, :method => :delete, :confirm => "are you sure?" %>
+       </li>
+      <% end %>
+    </ol>
+    <%= link_to "create a task", new_task_path %>
+
+Pero aún no tenemos nuestra acción `destroy` (que, según nuestra convención, reflejada en la tabla de rutas, es la que se encarga de un `DELETE`). Así que agreguémosla al controlador:
+
+    def destroy
+        Task.find_by_id(params[:id]).try(:delete)
+        redirect_to tasks_path
+    end
+    
+Una observación: estamos usando el método [`try`](http://guides.rubyonrails.org/active_support_core_extensions.html#try), que rails agrega a los objetos para que, si el objeto no es `nil`, lo ejecute, y si es `nil`, sólo devuelva `nil`. Además, estamos usando el método `find_by_id` en lugar de `find`, para que, si el objeto no existe, simplemente devuelva `nil`, en lugar de levantar una excepción.
+
+Con esto prácticamente terminamos este ciclo, aún nos falta revisar las _validaciones en formularios_ y de tarea quedaría hacer que se pueda __actualizar (editar) una tarea__.
+
+Más información sobre los controladores está en las [guías oficiales de rails](http://guides.rubyonrails.org/action_controller_overview.html). Y sobre las vistas, podés leer sobre los [layouts](http://guides.rubyonrails.org/layouts_and_rendering.html) y sobre los [métodos de ayuda para formularios](http://guides.rubyonrails.org/form_helpers.html) también en las guías oficiales. Para saber sobre los métodos que rails agrega a los objetos de ruby, consultá aquí: <http://guides.rubyonrails.org/active_support_core_extensions.html>.
+
+###4. Cerrando esta iteración: subiendo la aplicación a heroku
+
+Para subir una aplicación a heroku, tenés que tener una [cuenta en heroku](http://api.heroku.com/signup) y seguir el proyecto con git. Una observación a hacer: __tu carpeta `.git` debería estar al mismo nivel que los archivos de rails (es decir, la carpeta `app` y la carpeta `.git` deberían estar en la misma carpeta, si no, heroku no aceptará la aplicación). Todos los archivos de tu aplicación deben ser conocidos por git.
+
+Para que de ahora en adelante heroku confíe en vos, ejecutá lo siguiente:
+
+    heroku login
+    
+(te pedirá el correo y contraseña de tu cuenta en heroku).
+
+Antes de poder usar heroku, necesitamos hacer una pequeña edición en nuestro `Gemfile`, donde dice
+
+    gem 'sqlite3'
+    
+Sustituilo por las siguientes dos líneas:
+
+    gem 'sqlite3', :group => :development
+    gem 'pg', :group => :production 
+    
+Y ejecutá, en terminal:
+
+    bundle install --without production
+    
+Volvé a hacer un commit de todo, acabás de cambiar algunos de los gems de tu proyecto.
+
+¿Qué acabamos de hacer? La opción `:group` del método `gem` le dice a `bundler` (la utilidad que maneja nuestras dependencias), en qué [entorno](http://thirddirective.com/posts/14-rails-environments) estaremos usando cada gem: el gem `sqlite3` lo usaremos al programar (`development`) y el gem `pg` (para comunicarse con bases de datos en [postgreSQL](http://www.postgresql.org/)), en un ambiente de producción (heroku es un ambiente de producción: porque es públicamente accesible).
+
+Ahora, creá tu repositorio en heroku con la siguiente instrucción:
+
+    heroku create --stack cedar
+    
+Que debería tener una salida similar a esta:
+
+    Creating stark-moon-2137... done, stack is cedar
+    http://stark-moon-2137.herokuapp.com/ | git@heroku.com:stark-moon-2137.git
+    Git remote heroku added
+    
+Notá que el nombre antes de `herokuapp.com` es aleatorio, así que te saldrá uno diferente al que me salió a mí. Si la última línea (`Git remote heroku added`) no te aparece, agregá el repositorio de heroku manualmente con:
+
+    git remote add heroku git@heroku.com:NOMBRE_ASIGNADO_POR_HEROKU.git
+    
+Es hora de subir el código de nuestra aplicación a heroku:
+
+    git push heroku master
+    
+(estás subiendo el código a heroku, no a `origin`, que está en github)
+
+Y deberías ver algo como esto:
+
+    Counting objects: 129, done.
+    Delta compression using up to 4 threads.
+    Compressing objects: 100% (113/113), done.
+    Writing objects: 100% (129/129), 29.82 KiB, done.
+    Total 129 (delta 23), reused 0 (delta 0)
+    
+    -----> Heroku receiving push
+    -----> Ruby/Rails app detected
+    -----> Installing dependencies using Bundler version 1.2.0.pre
+           Running: bundle install --without development:test --path vendor/bundle --binstubs bin/ --deployment
+           …
+                  Cleaning up the bundler cache.
+    -----> Writing config/database.yml to read from DATABASE_URL
+    -----> Preparing app for Rails asset pipeline
+           Running: rake assets:precompile
+    -----> Rails plugin injection
+           Injecting rails_log_stdout
+           Injecting rails3_serve_static_assets
+    -----> Discovering process types
+           Procfile declares types      -> (none)
+           Default types for Ruby/Rails -> console, rake, web, worker
+    -----> Compiled slug size is 15.7MB
+    -----> Launching... done, v4
+           http://stark-moon-2137.herokuapp.com deployed to Heroku
+
+
+En este momento, tu aplicación ya está lista para ser visitada en heroku. Pero hay un problema: acabás de poner la aplicación en otra computadora, una que no sabe cuál es la estructura de tu base de datos (recordá que la base de datos __no__ es parte de tu aplicación). Para que heroku esté al tanto de tu base de datos, tenés que ejecutar las migraciones allí también (esto sólo se debería correr cada vez que cambiés la estructura de la BD):
+
+    heroku run rake db:migrate
+    
+Y deberías ver que las migraciones se ejecutaron:
+
+    Running rake db:migrate attached to terminal... up, run.1
+       Migrating to CreateTasks (20120514062804)
+    ==  CreateTasks: migrating ====================================================
+    -- create_table(:tasks)
+       -> 0.0080s
+    ==  CreateTasks: migrated (0.0082s) ===========================================
+    
+Ahora deberías poder entrar a tu aplicación, en la ruta `/tasks` (en el caso de este ejemplo, a `http://stark-moon-2137.herokuapp.com/tasks`) y usar la aplicación. 
+
+¡Felicidades, acabás de subir tu primera aplicación a internet!
+
+Si todo está bien, deberías subir todos tus cambios a tu repositorio de github también.
+
+
+###5. Extra: un controlador para la ruta raíz
+
+Si te fijás, en este punto sólo algo bajo `/tasks`. Si entrás a la ruta raíz (`/`) vas a ver una página por defecto de ruby on rails. Esa está en el archivo `public/index.html`. Borrémoslo:
+
+    rm public/index.html
+    
+Y agreguemos esta línea dentro del router:
+
+    root to: "tasks#index"
+    
+Ahí estamos simplemente diciendo: quiero que cuando se pida la ruta raíz, de esta también se encargue el método `index` de una instancia del controlador `tasks`
+
 
 ##Iteración 2: Los usuarios
 
