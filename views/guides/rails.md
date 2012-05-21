@@ -608,7 +608,130 @@ Pero aún no tenemos nuestra acción `destroy` (que, según nuestra convención,
     
 Una observación: estamos usando el método [`try`](http://guides.rubyonrails.org/active_support_core_extensions.html#try), que rails agrega a los objetos para que, si el objeto no es `nil`, lo ejecute, y si es `nil`, sólo devuelva `nil`. Además, estamos usando el método `find_by_id` en lugar de `find`, para que, si el objeto no existe, simplemente devuelva `nil`, en lugar de levantar una excepción.
 
-Con esto prácticamente terminamos este ciclo, aún nos falta revisar las _validaciones en formularios_ y de tarea quedaría hacer que se pueda __actualizar (editar) una tarea__.
+#### Validaciones en formularios
+
+Hasta este momento, nuestra acción de crear se ve así:
+
+    def create
+        @task = Task.create(params[:task])
+        redirect_to @task
+    end
+    
+Pero está asumiendo que todo ha salido bien. ¿Cómo hacer para cuando las cosas salen mal, como validaciones que no pasan?
+
+Recordemos que en lugar de usar el método `create`, podríamos crear la instancia y luego intentar guardarla. El método `save` nos devuelve un valor booleano que dice si la instancia se pudo guardar o no. Así que podríamos hacer que se vea así:
+
+    def create
+        @task = Task.new(params[:task])
+        if @task.save
+            redirect_to @task
+        end
+    end
+    
+La gran pregunta es ¿qué hacer cuando una tarea __no__ se salve? Idealmente, deberíamos _volver a mostrar el formulario_ y allí mostrar los errores. Rails nos permite elegir qué plantilla usar mediante el método `render`, así que podemos cambiar la acción por esto
+
+    def create
+        @task = Task.new(params[:task])
+        if @task.save
+            redirect_to @task
+        else
+            render :new
+        end
+    end
+    
+Para decirle que, si no pudimos guardar, se vuelva a mostrar el formulario. Pero ¿qué ganamos con mostrar el formulario de nuevo? No mucho si no hay forma de mostrar los errores, así que editemos el formulario (en `app/views/tasks/new.html.erb`):
+
+    <h1>Create a task</h1>
+    <%= form_for @task do |f| %>
+      <% if @task.errors.any? %>
+          <h2>Invalid task, the errors were:</h2>
+          <ul>
+              <% @task.errors.full_messages.each do |msg| %>
+                <li><%= msg %></li>
+              <% end %>
+          </ul>
+      <% end %>
+    
+      <p>
+        <%= f.label :description %>
+        <%= f.text_area :description %>
+      </p>
+      <p>
+        <%= f.label :priority %>
+        <%= f.number_field :priority %>
+      </p>
+      <p>
+        <%= f.submit %>
+      </p>
+    <% end %>
+
+Y ahora, si tratamos de guardar una tarea inválida, veremos una lista de errores al querer guardarla. Notá que usamos el métod `any?` para preguntarnos si la tarea tiene algún error y el método `full_messages` para obtener un arreglo con todos los mensajes de error.
+
+####Actualizando tareas
+
+Como ya te imaginarás, para actualizar una tarea necesitamos tener un formulario en la plantilla `app/views/tasks/edit.html.erb` pero, antes de hacerlo, considerá ¿no sería ese formulario prácticamente idéntico al que está en la plantilla para uno nuevo? Si lo sospechás, es cierto: todo el formulario sería idéntico. Así que ¿será que lo copiamos y pegamos? ¡NO! Recordá un principio muy importante en programación: _Don't Repeat Yourself_ (DRY). Afortunadamente, rails tiene el concepto de plantillas [parciales](http://guides.rubyonrails.org/layouts_and_rendering.html#using-partials).
+
+Así que vamos a hacer lo siguiente en `app/views/tasks/edit.html.erb`:
+
+    <h1>Edit a task:</h1>
+    <%= render 'form' %>
+    
+Que básicamente dice: buscá en esta carpeta (`app/views/tasks`) una plantilla llamada `_form.html.erb` (notá el guión bajo al principio), llenala con el binding actual y ponela aquí.
+
+Ahora, la plantilla `app/views/tasks/_form.html.erb` debería verse así:
+
+    <%= form_for @task do |f| %>
+      <% if @task.errors.any? %>
+          <h2>Invalid task, the errors were:</h2>
+          <ul>
+              <% @task.errors.full_messages.each do |msg| %>
+                <li><%= msg %></li>
+              <% end %>
+          </ul>
+      <% end %>
+    
+      <p>
+        <%= f.label :description %>
+        <%= f.text_area :description %>
+      </p>
+      <p>
+        <%= f.label :priority %>
+        <%= f.number_field :priority %>
+      </p>
+      <p>
+        <%= f.submit %>
+      </p>
+    <% end %>
+
+Luego, necesitamos encargarnos de la acción `edit`: ella debería encontrar la tarea que queremos editar y ponerla disponible en el binding para el formulario
+
+    def edit
+     @task = Task.find(params[:id])
+    end
+    
+Y deberíamos poner un vínculo en la lista de tasks (en `app/views/tasks/index.html.erb`) que nos permita editar una tarea:
+
+    <%= link_to "edit this task", edit_task_path(task) %>
+    
+Y, si vamos a editar una de nuestras tareas, deberíamos poder. Sabemos, también, que el formulario hará un `PUT` a `/tasks/:id`, y nuestra tabla de rutas dice que de esa combinación quien se encarga es el método `update` en el controlador, así que también editemos ese:
+
+    def update
+        @task = Task.find(params[:id])
+        if @task.update_attributes(params[:task])
+            redirect_to @task
+        else
+            render :edit
+        end
+    end
+    
+Si te fijás, es muy similar al método create, con algunas diferencias:
+
+* En vez de usar una nueva instancia, encontramos la instancia a editar con el método `find`
+* En vez de usar el método save, usamos el método de instancia `update_attributes`, que recibe un hash con los atributos a actualizar y devuelve `true` si logró guardar el modelo.
+* Si no logró guardar los cambios, volvemos a mostrar el formulario.
+
+Con esto, ya tenemos las siete acciones básicas que se pueden hacer con un recurso, y ya podemos manipular recursos a través de http, representados como html.
+
 
 Más información sobre los controladores está en las [guías oficiales de rails](http://guides.rubyonrails.org/action_controller_overview.html). Y sobre las vistas, podés leer sobre los [layouts](http://guides.rubyonrails.org/layouts_and_rendering.html) y sobre los [métodos de ayuda para formularios](http://guides.rubyonrails.org/form_helpers.html) también en las guías oficiales. Para saber sobre los métodos que rails agrega a los objetos de ruby, consultá aquí: <http://guides.rubyonrails.org/active_support_core_extensions.html>.
 
@@ -719,25 +842,183 @@ Y agreguemos esta línea dentro del router:
     
 Ahí estamos simplemente diciendo: quiero que cuando se pida la ruta raíz, de esta también se encargue el método `index` de una instancia del controlador `tasks`
 
+Ahora bien, quizá no queremos ese tipo de ambigüedad, o quizá queremos que en la ruta raíz salga algo diferente. Creemos un controlador que no sea un recurso, simplemente algo aparte:
+
+    rails g controller home index
+    
+Estamos creando un controlador llamado `home` con una acción `index`. En la plantilla (en `app/views/home/index.html.erb`):
+    
+    <h1>Tasks app</h1>
+    
+    <%= link_to "See all tasks", tasks_path %>
+
+
+Y cambiamos la ruta raíz en `config/routes.rb` a:
+
+    root to: "home#index"
+    
+Y ahora, en vez de ver la lista de tareas al pedir la ruta raíz (`/`), veremos la plantilla que acabamos de llenar. Acabamos de aprender, también, que podríamos hacer controladores que no tienen que ver, necesariamente, con un recurso.
 
 ##Iteración 2: Los usuarios
 
-###1. El modelo usuarios y la asociación con Task
+###1. Usando `scaffold` para generar el código que manipula usuarios
 
-Las propiedades son `string` por defecto.
+Ahora que ya tenemos las tareas, deberíamos ser capaces de asignarlas a usuarios. De modo que necesitamos un nuevo recurso: `User`. 
 
-    rails g model User email password_digest
+Para con este recurso, podríamos hacer como antes y crear el modelo, acciones y vistas manualmente. Pero sería básicamente lo mismo que ya hicimos. Recordá: don't repeat yourself.
+
+Rails, afortunadamente, nos permitiría generar todo de una vez con el generador de recursos (`rails generate resource`). Pero podemos ir un paso más allá y no sólo generar el recurso, sino ¡llenar el controlador y vistas de una sola vez! Para eso, usaremos un generador más:
+
+    rails generate scaffold User email username
+    
+Lo que hicimos fue decir: "generá todo lo necesario para manipular un recurso llamado `User` con propiedad `email` y `username` (si no especificás el tipo de datos de una propiedad, será `string` por defecto).
+
+Deberías ver algo como esto:
+
+      invoke  active_record
+      create    db/migrate/20120521015711_create_users.rb
+      create    app/models/user.rb
+      invoke    test_unit
+      create      test/unit/user_test.rb
+      create      test/fixtures/users.yml
+       route  resources :users
+      invoke  scaffold_controller
+      create    app/controllers/users_controller.rb
+      invoke    erb
+      create      app/views/users
+      create      app/views/users/index.html.erb
+      create      app/views/users/edit.html.erb
+      create      app/views/users/show.html.erb
+      create      app/views/users/new.html.erb
+      create      app/views/users/_form.html.erb
+      invoke    test_unit
+      create      test/functional/users_controller_test.rb
+      invoke    helper
+      create      app/helpers/users_helper.rb
+      invoke      test_unit
+      create        test/unit/helpers/users_helper_test.rb
+      invoke  assets
+      invoke    coffee
+      create      app/assets/javascripts/users.js.coffee
+      invoke    scss
+      create      app/assets/stylesheets/users.css.scss
+      invoke  scss
+      create    app/assets/stylesheets/scaffolds.css.scss
+      
+Si te fijás, creó todo lo que nosotros habíamos creado en partes antes, pero no sólo eso, ¡sino que ya llenó de código el controlador y vistas! (¡andá ve!). 
+
+Algo diferente que vas a notar en el código generado es que todas las acciones en el controlador usan el método [`respond_to`](http://guides.rubyonrails.org/action_controller_overview.html#rendering-xml-and-json-data). Ese método sirve para decidir, en base al formato pedido, cómo representar el recurso (recordá que poder tener varias representaciones es escencial para una arquitectura REST), usar ese método se ve así:
+
+    respond_to do |format|
+      format.html # index.html.erb
+      format.json { render json: @users }
+    end
+    
+Que básicamente es: en base al formato pedido, si es html, dejar que nada pase (para que haga lo por-defecto, que es llenar y mostrar la plantilla `index.html.erb`, en el caso de la acción `index`) y, en el caso de que se pida `json`, mostrar un objeto json a partir del arreglo de usuarios. Para probarlo, podrías crear un par de usuarios y luego pedir (desde curl o el browser): `/users.json`, y verías un objeto JSON con la lista de usuarios. Recordá que en la tabla de rutas el segmento dinámico opcional `.:format` nos permite agregar el formato necesitado a la ruta.
+
+Recordá que acabás de generar un modelo, de modo que necesitás correr la migración (después de hacer un commit):
+
+    rake db:migrate
+    git push heroku master
+    heroku run rake db:migrate
+
+Por último, podríamos agregar la siguiente línea a la página que vemos en la raíz (`app/views/home/index.html.erb`): 
+
+    <%= link_to "All users", users_path %>
+    
+Si ejecutás el servidor (`rails server`), vas a notar que la página se ve ligeramente mejor (los vínculos son grises, no azules, el tipo de letra ya no es times new roman, etc.) Esto es gracias a una _hoja de estilos_ que se agregó: `app/assets/stylesheets/scaffolds.css.scss`, ¡también en eso nos ayudó rails!
+
+###2. Relacionando usuarios a tareas
+
+Ahora llegamos a lo bueno ¿cómo hacer para relacionar usuarios a tareas?. La idea es simple: necesitamos saber, por cada tarea, quién está asignado, ¿no? Además, los usuarios tienen un identificador único, de modo que, sabiendo éste, sabríamos quién es el responsable de la tarea. En lenguaje de bases de datos, tendríamos que tener una columna más en cada fila de tarea: una columna que guarde el responsable de la tarea. Como va a ser el identificador del usuario, llamémosle `user_id`. 
+
+Para agregar una columna a la tabla de usuarios, puesto que hemos de cambiar la estructura de la base de datos, necesitamos una migración. Rails tiene un generador de migraciones con una convención interesante: si escribimos `AddXXXXToTABLE`, va a saber que queremos agregar una columna a la tabla `TABLE`, y generará una migración con las instrucciones adecuadas. En este caso, esperaría un parámetro más: la columna a agregar:
+
+
     rails g migration AddUserIdToTasks user_id:integer
 
-###2. Administración de usuarios
 
-    rails g scaffold_controller users index show new create edit update destroy 
+una vez que ejecutés la migración (`rake db:migrate`), tu tabla tendrá un campo para el identificador de usuarios.
+
+Pero eso fue a nivel de la base de datos, a nivel de los modelos también tenemos que informar de esta asociación, así que, en el modelo para tareas (`app/models/task.rb`), agregaríamos esta línea:
+
+    class Task < ActiveRecord::Base
+        belongs_to :user
+        …
+        #el resto del código
+    end
+
+Con `belongs_to` simplemente estamos avisándole a rails que cada instancia de este modelo pertenecerá a un usuario. Con esto, ya sabrá que tiene que buscar el propietario en una columna llamada `user_id` (por convención). Y no sólo eso, sino que también líneas como `task.user` nos darán una instancia completa de usuario, porque rails se encargará de buscar en la base de datos un usuario con el id que esté guardado en la instancia de task, automáticamente.
+
+Asimismo, los usuarios también deberían estar avisados que las tareas les pertenecerán, así que en el modelo de usuario (`app/models/user.rb`), escribimos:
+
+    class User < ActiveRecord::Base
+        has_many :tasks
+    end
+
+Con esto, líneas como `user.tasks` funcionarán: nos devolverían el arreglo de todas las tareas que le pertenecen a un usuario.
+
+Para saber más sobre asociaciones, consultá la [guía oficial de rails sobre asociaciones](http://guides.rubyonrails.org/association_basics.html). 
+
+Ahora bien, necesitamos reflejar en el formulario de tareas que éstas pueden pertenecer a un usuario. Para ello, necesitamos un campo en la plantilla parcial para el formulario (`app/views/tasks/_form.html.erb`) que nos permita elegir un usuario. Esto es un problema interesante: necesitaríamos poder elegir un identificador único dentro de todos los usuarios y asignarlo al campo `user_id`. En html existe el tag `select`, que funciona así
+
+    <select name="user_id">
+        <option value="1">lfborjas</option>
+        <option value="2">johnnycash</option>
+    </select>
+
+Si te fijás, usamos el tag `select` para nombrar el campo a llenar. Y el tag `option` para las opciones que habrían de salir. Las opciones tienen un valor en el atributo `value` que es el que será enviado en el formulario, y otro dentro del tag que sólo se mostrará. Rails tiene un _helper_ que nos ayuda con todo eso: `collection_select`. Agreguemos esto dentro del formulario en `app/views/tasks/_form.html.erb`:
+
+    <%= f.label :user %>
+    <%= f.collection_select :user_id, User.all, :id, :username %>
     
-###3. Asociaciones en forms
+Que básicamente es: quiero tener de opciones para el campo `user_id` a todos los usuarios (`User.all`) y que el valor de las opciones sea el `id` de cada instancia y lo que el usuario vea sea el `username` de cada instancia.
+
+###3. Viendo las tareas de cada usuario
+
+Ahora que ya podemos asignarle tareas a un usuario, deberíamos poder ver todas las tareas asignadas a un usuario. Idealmente, deberíamos hacerlo a través de una url clara como `/users/lfborjas/tasks` o, usando segmentos dinámicos, `/users/:id/tasks`. Hay dos cosas a hacer:
+    
+    resources :users do
+        get tasks, on: :member
+    end
+    
+    tasks_user GET    /users/:id/tasks(.:format) users#tasks
+    
+    def tasks
+        @tasks = User.find_by_username(params[:id]).tasks
+        render 'tasks/index'
+    end
+    
+    def to_param
+       username
+    end
 
 
 ###3. Autenticación
 
+    rails g migration AddPasswordToUsers password_digest:string
+    
+    gem 'bcrypt-ruby', '~> 3.0.0'
+    
+    bundle install --without production
+    rake db:migrate
+    
+    class User < ActiveRecord::Base
+        has_secure_password
+        attr_accessible :username, :email, :password, :password_confirmation
+        validates_uniqueness_of :username, :email
+    end
+    
+     <div class="field">
+    <%= f.label :password %><br />
+    <%= f.password_field :password %>
+      </div>
+      <div class="field">
+        <%= f.label :password_confirmation %><br />
+        <%= f.password_field :password_confirmation %>
+      </div>
+    
+    rails g controller sessions 
 <http://railscasts.com/episodes/250-authentication-from-scratch-revised> y <http://railscasts.com/episodes/250-authentication-from-scratch>
 
 
