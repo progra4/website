@@ -996,29 +996,163 @@ Ahora que ya podemos asignarle tareas a un usuario, deberíamos poder ver todas 
 
 ###3. Autenticación
 
+Un caso muy común en las aplicaciones web es permitirle a los usuarios registrarse con un password, para poder autenticarse. Si te has fijado en aplicaciones como facebook o twitter, existe el concepto de "registrarse" (que es crear una cuenta de usuario) e "iniciar sesión" (que es crear una nueva sesión de uso).
+
+Vamos por pasos:
+
+#### Registrarse
+
+Si te fijaste, registrarse no es más que crear una cuenta de usuario, que es, simplemente, crear un usuario. Ya en el scaffold que hiciste es posible crear usuarios, pero se crean sin contraseña. Necesitamos algún mecanismo para guardar la contraseña de un usuario.
+
+Si te ponés a pensar, sería increíblemente inseguro guardar la contraseña de los usuarios en texto plano: cualquiera que pueda leer la base de datos podría verla. Un mecanismo muy común es usar [un hash cifrado](http://en.wikipedia.org/wiki/Cryptographic_hash_function) irreversible. De esta forma, para asegurarnos que un usuario dice que es quien es, en lugar de comparar su contraseña con la que tuviéramos guardada, simplemente ciframos la contraseña y, si el resultado es idéntico al guardado, es quien dice ser.
+
+Este _resultado_ que mencionamos arriba, lo llamaremos `password_digest` y, como necesitamos guardarlo con cada usuario, será una columna que agreguemos a la tabla usuarios:
+
     rails g migration AddPasswordToUsers password_digest:string
     
-    gem 'bcrypt-ruby', '~> 3.0.0'
-    
-    bundle install --without production
-    rake db:migrate
+Una vez que ejecutés `rake db:migrate`, pasemos a lo siguiente.
+
+Ok, ya guardamos el resultado, pero, ¿cómo lo calculamos? O, ¿cómo validaríamos que las personas, al crear un password, estén seguras de hacerlo, y que no esté en blanco? Y, cuando alguien quiera que lo autorizemos ¿cómo volver a calcular el password y asegurarse que es quien dice ser?. Todos estos métodos los podríamos hacer por nuestra cuenta, pero en __rails 3.1__ se agregó el método `has_secure_password`, que hace todo esto por nosotros, asumiendo que tenemos una columna `password_digest` y atributos `password` y `password_confirmation` para cuando se cree un usuario (estos atributos __no__ se guardan en la base de datos).
+
+Agreguemos esto a nuestro modelo de usuario (`app/models/user.rb`)
+
     
     class User < ActiveRecord::Base
         has_secure_password
         attr_accessible :username, :email, :password, :password_confirmation
         validates_uniqueness_of :username, :email
     end
+
+El método `has_secure_password` asume que tenemos una librería de cifrado, así que agreguemos una librería para usar el algoritmo `bcrypt` a nuestro `Gemfile`:
+
     
+    gem 'bcrypt-ruby', '~> 3.0.0'
+    
+Y lo instalamos:
+    
+    bundle install --without production
+
+Ahora, necesitamos que, al crear un usuario desde un browser, se le pidan los atributos nuevos (`password` y `password_confirmation`).
+    
+    <div class="field">
+        <%= f.label :password %><br />
+        <%= f.password_field :password %>
+    </div>
      <div class="field">
-    <%= f.label :password %><br />
-    <%= f.password_field :password %>
-      </div>
-      <div class="field">
         <%= f.label :password_confirmation %><br />
         <%= f.password_field :password_confirmation %>
+     </div>
+    
+Y con esto, ya permitimos a los usuarios registrarse.
+
+####Iniciar sesión
+
+Ahora que podemos crear una "cuenta" en nuestra aplicación, deberíamos permitirle al usuario "iniciar sesión". Recordemos que en http todo se basa en los recursos, así que esto de _iniciar sesión_ no es más que __crear__ una sesión. En otras palabras, las _sesiones_ son recursos. Nada más y nada menos. Pero esta vez, estos recursos sólo existirán virtualmente, no en la base de datos.
+
+Como vamos a manipular un recurso, necesitamos un controlador, con la acción `new` para tener un formulario donde crear las sesiones:
+    
+    rails g controller sessions new
+    
+Y agregar el recurso a nuestro `config/routes.rb`:
+
+    resources :sessions
+    
+Ahora, nuestra acción `new` puede quedarse vacía, lo que nos interesa es el formulario. La gran pregunta es ¿cómo se vería un formulario que __no__ sea para un modelo? Afortunadamente, rails también nos da [helpers para formularios simples](http://guides.rubyonrails.org/form_helpers.html#dealing-with-basic-forms)
+
+De modo que la plantilla de este formulario (en `app/views/sessions/new.html.erb`):
+
+    
+    <%= form_tag sessions_path do %>
+      <div class="field">
+        <%= label_tag :email %>
+        <%= text_field_tag :email, params[:email] %>
       </div>
     
-    rails g controller sessions 
+      <div class="field">
+        <%= label_tag :password %>
+        <%= password_field_tag :password %>
+      </div>
+    
+      <div class="actions"><%= submit_tag "Log In" %>
+    <% end %>
+
+Si te fijás, esta vez no usamos el método `form_for` ni usamos la variable `f` para construir el form: este formulario no construirá ningún objeto, sino que enviará los parámetros `email` y `password`.
+
+Y este formulario hará `POST` a la ruta `/sessions`, de modo que de ello se puede encargar el método `create` del controlador (`app/controllers/sessions_controller.rb`):
+
+      def create
+        user = User.find_by_email params[:email]
+        if user && user.authenticate(params[:password])
+          session[:user_id] = user.id
+          redirect_to root_url , notice: "Logged in!"
+        else
+          flash.now.alert "Email or password is invalid"
+        end
+      end
+      
+Lo que hacemos es simple:
+
+* Encontrar al usuario cuyo email corresponde al dado (con el [método dinámico](http://guides.rubyonrails.org/active_record_querying.html#dynamic-finders))
+* Usamos el método `authenticate` que `has_secure_password` agrega a las instancias de   nuestro modelo `User`
+* Si el usuario es quien dice ser, guardamos su identificador único en la sesión.
+* Usamos el [flash](http://guides.rubyonrails.org/action_controller_overview.html#the-flash) para reportar si se logró hacer la autenticación o si hubo un error.
+* Si la autenticación funcionó, redirigimos al usuario a la ruta raíz (`root_path`).
+
+Pero, ¿en qué consiste "crear una sesión"? Básicamente es hacer que el cliente recuerde (en un _cookie_), quién es. Pero en vez de guardarlo en un cookie (porque alguien podría pretender ser quien no es), usamos el concepto de [sesión](http://guides.rubyonrails.org/action_controller_overview.html#session). 
+
+De modo que, "cerrar sesión" simplemente es destruir una sesión, la sesión actual del usuario:
+
+
+      def destroy
+        session[:user_id] = nil
+        redirect_to root_url, notice: "Logged out!"
+      end
+      
+
+Mucho de lo que hacemos en una aplicación que tiene sesiones de uso es asegurarnos que hay un usuario que haya iniciado sesión. Para esto, agregaremos dos métodos comunes a todos los controladores: `current_user` para saber el usuario actual y `logged_in?` para saber si hay un usuario autenticado. Así que agregaremos esos métodos al padre de todos los controladores: `application_controller` (en `app/controllers/application_controller.rb`)
+
+    class ApplicationController < ActionController::Base
+      protect_from_forgery
+   
+      private
+      def current_user
+        @current_user ||= User.find(session[:user_id]) if session[:user_id]
+      end
+    
+      def logged_in?
+        current_user != nil
+      end
+    
+      helper_method :current_user, :logged_in?
+    end
+
+
+Ahora que tenemos eso, podríamos hacer que en todas las páginas de la aplicación nos muestre quién está autenticado, o, si no hay nadie, que nos dé la opción de crear una cuenta o iniciar sesión. Para lograr esto, editaremos el _layout_ general de todas las plantillas, que está en `app/views/layouts/application.html.erb`:
+    
+    <% unless logged_in? %>
+      <%= link_to "Create an account", new_user_path %>
+      <%= link_to "Log In", new_session_path %>
+    <% else %>
+      Logged in as <%= current_user.username %>
+      <%= link_to "Log out", session_path("current"), method: "delete" %>
+    <%end%>
+    
+En este momento, la ruta para crear una cuenta se ve como `/users/new`, y para una sesión `/sessions/new`. Agreguemos rutas que se vean mejor a `config/routes.rb`:
+
+      get 'signup', to: 'users#new', as: 'signup'
+      get 'login', to: 'sessions#new', as: 'login'
+      get 'logout', to: 'sessions#destroy', as: 'logout'
+      
+ Y así, lo que hicimos arriba podría verse así:
+ 
+    <% unless logged_in? %>
+      <%= link_to "Create an account", signup_path %>
+      <%= link_to "Log In", login_path %>
+    <% else %>
+      Logged in as <%= current_user.username %>
+      <%= link_to "Log out", logout_path %>
+    <%end%> 
+
 <http://railscasts.com/episodes/250-authentication-from-scratch-revised> y <http://railscasts.com/episodes/250-authentication-from-scratch>
 
 
