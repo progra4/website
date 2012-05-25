@@ -27,9 +27,14 @@ La aplicacion no tiene que _verse_ "bonita" como la que está en línea, pero de
 * __sólo al propietario de un review__ permitirle editarlo o destruirlo.
 
 
-Parte de la evaluación en este examen es que seás capaz de usar `gems` para hacerte la vida más fácil, se requiere que usés al menos dos de estas:
+Parte de la evaluación en este examen es que seás capaz de usar `gems` para hacerte la vida más fácil, se requiere que usés al menos un gem. Yo recomendaría una de estas pero podés usar cualquiera. 
 
 * [Sorcery](https://github.com/NoamB/sorcery) o [devise](https://github.com/plataformatec/devise) (no usés ambas, sólo una: hacen cosas similares)
 * [Twitter bootstrap](https://github.com/seyhunak/twitter-bootstrap-rails)
 * [Simple_form](http://github.com/plataformatec/simple_form)
 
+Recursos que te podrían servir:
+
+* [Rails guides](http://guides.rubyonrails.org/)
+* [Rails API documentation](http://api.rubyonrails.org/)
+* [Railscasts](http://railscasts.com/)
