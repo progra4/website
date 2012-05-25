@@ -1,0 +1,169 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+blockquote {
+    margin: 0;
+    padding: 0;
+}
+body {
+    font-family: "Helvetica Neue", Helvetica, "Hiragino Sans GB", Arial, sans-serif;
+    font-size: 13px;
+    line-height: 18px;
+    color: #737373;
+    margin: 10px 13px 10px 13px;
+}
+a {
+    color: #0069d6;
+}
+a:hover {
+    color: #0050a3;
+    text-decoration: none;
+}
+a img {
+    border: none;
+}
+p {
+    margin-bottom: 9px;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    color: #404040;
+    line-height: 36px;
+}
+h1 {
+    margin-bottom: 18px;
+    font-size: 30px;
+}
+h2 {
+    font-size: 24px;
+}
+h3 {
+    font-size: 18px;
+}
+h4 {
+    font-size: 16px;
+}
+h5 {
+    font-size: 14px;
+}
+h6 {
+    font-size: 13px;
+}
+hr {
+    margin: 0 0 19px;
+    border: 0;
+    border-bottom: 1px solid #ccc;
+}
+blockquote {
+    padding: 13px 13px 21px 15px;
+    margin-bottom: 18px;
+    font-family:georgia,serif;
+    font-style: italic;
+}
+blockquote:before {
+    content:"\201C";
+    font-size:40px;
+    margin-left:-10px;
+    font-family:georgia,serif;
+    color:#eee;
+}
+blockquote p {
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 18px;
+    margin-bottom: 0;
+    font-style: italic;
+}
+code, pre {
+    font-family: Monaco, Andale Mono, Courier New, monospace;
+}
+code {
+    background-color: #fee9cc;
+    color: rgba(0, 0, 0, 0.75);
+    padding: 1px 3px;
+    font-size: 12px;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+}
+pre {
+    display: block;
+    padding: 14px;
+    margin: 0 0 18px;
+    line-height: 16px;
+    font-size: 11px;
+    border: 1px solid #d9d9d9;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+pre code {
+    background-color: #fff;
+    color:#737373;
+    font-size: 11px;
+    padding: 0;
+}
+@media screen and (min-width: 768px) {
+    body {
+        width: 748px;
+        margin:10px auto;
+    }
+}
+</style>
+<title>Examen 2</title>
+</head>
+<body>
+<h1>Examen 2</h1>
+
+<p>El propósito de este examen es reproducir la aplicación que se encuentra en <a href="http://examen2.herokuapp.com/">http://examen2.herokuapp.com/</a> en ruby on rails.</p>
+
+<p>La aplicación es simple: una persona puede poner un pedazo de código, con un título y descripción, y otras personas pueden comentar respecto a ello. Más o menos para pedir ayuda respecto a código que uno esté haciendo.</p>
+
+<h2>Método de entrega:</h2>
+
+<p>La aplicación se entregará via heroku. Recordá que heroku guarda repositorios de git también, así que te recomiendo hacer push ahí. Si querés más seguridad, podés decirme para que te cree un repositorio privado en github. Pero con heroku debería ser suficiente.</p>
+
+<p>Para el lunes, debés haber subido la aplicación a heroku y ejecutado esta línea:</p>
+
+<pre><code>heroku sharing:add luisfborjas@gmail.com
+</code></pre>
+
+<p>Lo cual me enviará una notificación por correo electrónico y me permitirá bajar tu código. La aplicación será revisada como esté funcionando en heroku.</p>
+
+<p><strong>importante</strong>: incluí un archivo llamado <code>README</code> con tu nombre y número de cuenta.</p>
+
+<h2>Requerimientos</h2>
+
+<p>La aplicacion no tiene que <em>verse</em> &ldquo;bonita&rdquo; como la que está en línea, pero debe tener la misma funcionalidad:</p>
+
+<ul>
+<li>Permitirle a los usuarios crear una cuenta, iniciar sesión y cerrar sesión, con retroalimentación visual (decirles si tienen una sesión iniciada, permitirles salir, etc.)</li>
+<li>Permitirle a la gente ver todos los &ldquo;reviews&rdquo; que se han creado <strong>en orden descendente por fecha de creación</strong>.</li>
+<li><strong>sólo a usuarios autenticados</strong> permitirles crear nuevos reviews</li>
+<li><strong>en la misma página donde se muestra un review, sólo a usuarios autenticados</strong> permitir comentar en un review</li>
+<li><strong>sólo al propietario de un review</strong> permitirle editarlo o destruirlo.</li>
+</ul>
+
+
+<p>Parte de la evaluación en este examen es que seás capaz de usar <code>gems</code> para hacerte la vida más fácil, se requiere que usés al menos dos de estas:</p>
+
+<ul>
+<li><a href="https://github.com/NoamB/sorcery">Sorcery</a> o <a href="https://github.com/plataformatec/devise">devise</a> (no usés ambas, sólo una: hacen cosas similares)</li>
+<li><a href="https://github.com/seyhunak/twitter-bootstrap-rails">Twitter bootstrap</a></li>
+<li><a href="http://github.com/plataformatec/simple_form">Simple_form</a></li>
+</ul>
+
+</body>
+</html>
